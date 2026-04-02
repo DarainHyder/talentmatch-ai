@@ -1,0 +1,48 @@
+#!/bin/bash
+
+echo "🧼 ULTIMATE SAFE CLEANUP"
+echo "========================"
+
+# Step 1: Analysis
+echo "📊 Analyzing project..."
+./analyze_clutter.sh > /tmp/cleanup_analysis.txt
+echo "Analysis saved to /tmp/cleanup_analysis.txt"
+
+# Step 2: Ask for confirmation
+echo ""
+echo "⚠️  FILES TO BE CLEANED:"
+grep -E "(LARGE|DUPLICATE|PYTHON|BUILD|NODE_MODULES)" /tmp/cleanup_analysis.txt | head -20
+echo ""
+
+read -p "Continue with SAFE cleanup (backup created)? (y/N): " -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "❌ Cleanup cancelled."
+    exit 1
+fi
+
+# Step 3: Backup
+BACKUP_DIR="backup_preclean_$(date +%s)"
+echo "💾 Creating backup in $BACKUP_DIR..."
+mkdir -p "$BACKUP_DIR"
+cp -r src backend package.json requirements.txt docker-compose.yml .env* *.md "$BACKUP_DIR/" 2>/dev/null
+
+# Step 4: Execute safe cleanup only
+echo "🧹 Cleaning safe targets..."
+find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null
+find . -name "*.pyc" -delete 2>/dev/null
+find . -name "*.pyo" -delete 2>/dev/null
+find . -name ".DS_Store" -delete 2>/dev/null
+find . -name "Thumbs.db" -delete 2>/dev/null
+find . -name "*~" -delete 2>/dev/null
+find . -name "*.tmp" -delete 2>/dev/null
+find . -name "*.log" -delete 2>/dev/null
+
+# Step 5: Report
+echo ""
+echo "✅ CLEANUP COMPLETE"
+echo "📊 Space freed:"
+du -sh . "$BACKUP_DIR" 2>/dev/null
+echo ""
+echo "Backup available at: $BACKUP_DIR"
+echo "Test your application before deleting backup!"

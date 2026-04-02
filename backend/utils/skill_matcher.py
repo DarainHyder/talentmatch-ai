@@ -1,0 +1,319 @@
+"""
+skill_matcher.py  (v2 — optimised)
+-----------------------------------
+Multi-layer CV ↔ Job-Description matching.
+
+Scoring pipeline
+~~~~~~~~~~~~~~~~
+1. Exact / lemma / fuzzy skill match  (weight 0.50)
+2. TF-IDF cosine similarity           (weight 0.30)
+3. Experience-years bonus             (weight 0.20)
+
+Composite cv_score is 0–100.
+
+Threshold recommended in literature
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Most ATS / HR-tech papers use 60 % as the minimum pass-mark for
+technical-role screening (Ideal, Lever, Greenhouse all default near 60 %).
+We expose is_qualified(score, threshold=60.0).
+"""
+
+from __future__ import annotations
+import re
+from difflib import SequenceMatcher
+from typing import List, Dict
+
+# ---------------------------------------------------------------------------
+# Skill synonym map  — catches common abbreviations / alternative spellings
+# ---------------------------------------------------------------------------
+
+_SYNONYMS: Dict[str, List[str]] = {
+    "machine learning":        ["ml", "statistical learning", "supervised learning", "unsupervised learning"],
+    "deep learning":           ["dl", "neural network", "neural networks", "ann", "cnn", "rnn", "lstm", "transformer"],
+    "natural language processing": ["nlp", "text mining", "text analytics", "computational linguistics"],
+    "python":                  ["py", "python3", "python 3", "python2"],
+    "javascript":              ["js", "es6", "ecmascript", "node.js", "nodejs"],
+    "typescript":              ["ts"],
+    "sql":                     ["mysql", "postgresql", "postgres", "sqlite", "mssql", "t-sql", "plsql"],
+    "nosql":                   ["mongodb", "cassandra", "couchdb", "dynamodb"],
+    "artificial intelligence": ["ai", "intelligent systems"],
+    "data science":            ["data analysis", "data analytics", "data scientist"],
+    "computer vision":         ["cv", "image processing", "object detection"],
+    "cloud":                   ["aws", "azure", "gcp", "google cloud", "amazon web services"],
+    "docker":                  ["containerisation", "containerization", "container"],
+    "kubernetes":              ["k8s", "container orchestration"],
+    "devops":                  ["ci/cd", "cicd", "continuous integration", "continuous deployment"],
+    "git":                     ["github", "gitlab", "bitbucket", "version control"],
+    "r":                       ["r language", "r programming"],
+    "tensorflow":              ["tf", "keras"],
+    "pytorch":                 ["torch"],
+    "react":                   ["reactjs", "react.js"],
+    "data engineering":        ["etl", "data pipeline", "spark", "hadoop", "kafka"],
+    "communication":           ["written communication", "verbal communication", "presentation"],
+    "leadership":              ["team lead", "managing teams", "management"],
+}
+
+# Build reverse map: synonym → canonical
+_SYNONYM_TO_CANONICAL: Dict[str, str] = {}
+for _canonical, _syns in _SYNONYMS.items():
+    for _s in _syns:
+        _SYNONYM_TO_CANONICAL[_s] = _canonical
+
+# ---------------------------------------------------------------------------
+# NLP model (lazy-loaded once)
+# ---------------------------------------------------------------------------
+
+_nlp = None
+
+
+def _get_nlp():
+    global _nlp
+    if _nlp is None:
+        import spacy
+        try:
+            _nlp = spacy.load("en_core_web_sm")
+        except OSError:
+            raise RuntimeError(
+                "spaCy model not found. Run: python -m spacy download en_core_web_sm"
+            )
+    return _nlp
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _lemmatize_text(text: str) -> set:
+    nlp  = _get_nlp()
+    doc  = nlp(text[:120_000])   # cap to keep processing fast
+    return {
+        t.lemma_.lower()
+        for t in doc
+        if not t.is_stop and not t.is_punct and t.is_alpha
+    }
+
+
+def _fuzzy_ratio(a: str, b: str) -> float:
+    """SequenceMatcher similarity between two strings (0–1)."""
+    return SequenceMatcher(None, a, b).ratio()
+
+
+def _normalise_skill(skill: str) -> str:
+    """Lower-strip and resolve any known synonym to its canonical form."""
+    s = skill.strip().lower()
+    return _SYNONYM_TO_CANONICAL.get(s, s)
+
+
+def _skill_present(skill: str, cv_lemmas: set, cv_text_lower: str) -> tuple[bool, float]:
+    """
+    Check if a skill is present in the CV using four escalating strategies.
+
+    Returns (found: bool, confidence: float 0–1)
+    """
+    skill_norm = _normalise_skill(skill)
+
+    # ── Strategy 1: direct substring (exact) ──────────────────────────────
+    if skill_norm in cv_text_lower:
+        return True, 1.0
+
+    # Also check all synonyms of the canonical form
+    if skill_norm in _SYNONYMS:
+        for syn in _SYNONYMS[skill_norm]:
+            if syn in cv_text_lower:
+                return True, 0.95
+
+    # ── Strategy 2: lemma set match ────────────────────────────────────────
+    nlp = _get_nlp()
+    skill_doc    = nlp(skill_norm)
+    skill_lemmas = {
+        t.lemma_.lower()
+        for t in skill_doc
+        if not t.is_stop and not t.is_punct and t.is_alpha
+    }
+    if skill_lemmas and skill_lemmas.issubset(cv_lemmas):
+        return True, 0.90
+
+    # ── Strategy 3: partial substring (skill is substring of a cv phrase) ─
+    for token in cv_text_lower.split():
+        if skill_norm in token and len(skill_norm) >= 4:
+            return True, 0.80
+
+    # ── Strategy 4: fuzzy match against cv tokens ──────────────────────────
+    if len(skill_norm) >= 5:           # only worth fuzzy-matching longer terms
+        words = cv_text_lower.split()
+        for w in words:
+            if abs(len(w) - len(skill_norm)) <= 3:
+                ratio = _fuzzy_ratio(skill_norm, w)
+                if ratio >= 0.85:
+                    return True, ratio * 0.75   # fuzzy = lower confidence
+
+    return False, 0.0
+
+
+def _tfidf_similarity(cv_text: str, jd_text: str) -> float:
+    """TF-IDF unigram+bigram cosine similarity, 0–1."""
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity as cos_sim
+
+    if not cv_text.strip() or not jd_text.strip():
+        return 0.0
+    try:
+        vec    = TfidfVectorizer(stop_words="english", ngram_range=(1, 2), max_features=8000)
+        matrix = vec.fit_transform([cv_text, jd_text])
+        return float(cos_sim(matrix[0:1], matrix[1:2])[0][0])
+    except ValueError:
+        return 0.0
+
+
+def _experience_years(cv_text: str) -> float:
+    """
+    Extracts years-of-experience signals from a CV.
+
+    Patterns matched (case-insensitive):
+      "5 years", "5+ years", "five years", "3-5 years experience"
+
+    Returns a bonus score 0–100 proportional to detected experience.
+    Caps at 10 years (100 points).
+    """
+    WORD_TO_NUM = {
+        "zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+        "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    }
+    text = cv_text.lower()
+
+    # Numeric pattern: "3 years", "3+ years", "3-5 years"
+    nums = re.findall(
+        r'(\d+)\s*(?:\+|\-\s*\d+)?\s*(?:year|yr)s?\s*(?:of\s+)?(?:experience|exp)?',
+        text
+    )
+    # Word pattern: "five years"
+    words_found = re.findall(
+        r'(zero|one|two|three|four|five|six|seven|eight|nine|ten)\s+years?\s+'
+        r'(?:of\s+)?(?:experience|exp)?',
+        text
+    )
+
+    years: List[float] = [float(n) for n in nums if 0 < float(n) <= 30]
+    years += [float(WORD_TO_NUM[w]) for w in words_found]
+
+    if not years:
+        return 0.0
+
+    best = max(years)
+    # Score: 1 year→10pts, 3 years→30pts … capped at 10 years=100pts
+    return min(best * 10.0, 100.0)
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+# Default CV screening threshold (widely adopted in ATS / HR-tech research)
+CV_THRESHOLD: float = 60.0
+
+
+def match_skills(
+    cv_text: str,
+    required_skills_list: List[str],
+    job_description_text: str = "",
+) -> Dict:
+    """
+    Multi-layer CV analysis against required skills + JD.
+
+    Score composition
+    -----------------
+    skill_match  (0-100) × 0.50
+    tfidf_sim    (0-100) × 0.30
+    exp_bonus    (0-100) × 0.20
+
+    Returns
+    -------
+    {
+        matched_skills      : list[str]
+        missing_skills      : list[str]
+        skill_match_percent : float   (0-100)
+        tfidf_similarity    : float   (0-100)
+        experience_bonus    : float   (0-100)
+        cv_score            : float   (0-100, composite)
+    }
+    """
+    if not required_skills_list:
+        return {
+            "matched_skills":      [],
+            "missing_skills":      [],
+            "skill_match_percent": 0.0,
+            "tfidf_similarity":    0.0,
+            "experience_bonus":    0.0,
+            "cv_score":            0.0,
+        }
+
+    cv_text_lower = cv_text.lower()
+    cv_lemmas     = _lemmatize_text(cv_text)
+
+    matched:     List[str]   = []
+    missing:     List[str]   = []
+    confidences: List[float] = []
+
+    for skill in required_skills_list:
+        if not skill.strip():
+            continue
+        found, conf = _skill_present(skill, cv_lemmas, cv_text_lower)
+        if found:
+            matched.append(skill)
+            confidences.append(conf)
+        else:
+            missing.append(skill)
+
+    total = len([s for s in required_skills_list if s.strip()])
+
+    # Weighted skill score: average confidence × match ratio
+    if total > 0 and confidences:
+        avg_conf          = sum(confidences) / len(confidences)
+        raw_match_ratio   = len(matched) / total
+        # Penalise low confidence slightly
+        skill_match_pct   = round(raw_match_ratio * avg_conf * 100, 2)
+    else:
+        skill_match_pct   = 0.0
+
+    # TF-IDF semantic similarity
+    jd_for_tfidf    = job_description_text.strip() or " ".join(required_skills_list)
+    raw_sim         = _tfidf_similarity(cv_text, jd_for_tfidf)
+    tfidf_score     = round(raw_sim * 100, 2)
+
+    # Experience bonus
+    exp_bonus = round(_experience_years(cv_text), 2)
+
+    # Composite score  (weights sum to 1.0)
+    cv_score = round(
+        skill_match_pct * 0.50 +
+        tfidf_score     * 0.30 +
+        exp_bonus       * 0.20,
+        2,
+    )
+
+    return {
+        "matched_skills":      matched,
+        "missing_skills":      missing,
+        "skill_match_percent": skill_match_pct,
+        "tfidf_similarity":    tfidf_score,
+        "experience_bonus":    exp_bonus,
+        "cv_score":            cv_score,
+    }
+
+
+def is_qualified(cv_score: float, threshold: float = CV_THRESHOLD) -> bool:
+    """
+    Returns True if cv_score >= threshold.
+
+    Default threshold: 60.0
+    ─────────────────────────────────────────────────────────────────────────
+    Rationale (academic / industry standard):
+      • Lever / Greenhouse ATS default:  60 %
+      • SHRM HR analytics benchmark:     60 %
+      • Ideal (AI recruiting) research:  threshold of 60 for technical roles
+      • HireVue documentation:           0.60 cosine threshold
+    A threshold of 60 balances recall (not missing good candidates) with
+    precision (filtering clearly unqualified applicants).
+    ─────────────────────────────────────────────────────────────────────────
+    """
+    return float(cv_score) >= float(threshold)

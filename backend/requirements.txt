@@ -1,0 +1,12 @@
+flask
+flask-cors
+flask-jwt-extended
+python-dotenv
+google-generativeai
+PyPDF2
+python-docx
+spacy
+scikit-learn
+redis
+uuid
+gunicorn

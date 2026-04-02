@@ -1,0 +1,48 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Build outputs
+dist/
+build/
+.out/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups
+*.bak
+*.backup
+*~
+backup_*/
+
+# Temporary
+*.tmp
+temp/
+
+# Databases
+data/
+chroma_data/
+*.db
+*.sqlite3
