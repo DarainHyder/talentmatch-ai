@@ -91,19 +91,6 @@ const LoginPage: React.FC = () => {
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-            <span className="text-[11px]" style={{ color: 'var(--muted)' }}>or</span>
-            <div className="flex-1 h-px" style={{ background: 'var(--border)' }} />
-          </div>
-
-          {/* Demo */}
-          <button onClick={() => doLogin('admin@talentmatch.com', 'demo123')}
-            disabled={loading}
-            className="btn-ghost w-full disabled:opacity-50">
-            Continue as Demo Admin
-          </button>
         </div>
 
         <p className="text-center text-xs mt-5" style={{ color: 'var(--muted)' }}>
