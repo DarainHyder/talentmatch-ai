@@ -1,6 +1,6 @@
 import { ApiResponse } from '../types/api';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_URL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/$/, '');
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
