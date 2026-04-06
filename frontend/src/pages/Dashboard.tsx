@@ -110,7 +110,7 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
     { to: '/',                 icon: <Icons.home />,      label: 'Home Page'  },
   ];
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-56 z-30 flex flex-col border-r"
+    <aside className="static md:fixed md:left-0 md:top-0 md:bottom-0 w-full md:w-56 z-30 flex flex-col border-b md:border-b-0 md:border-r shrink-0"
       style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}>
       {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 h-14 border-b shrink-0" style={{ borderColor: 'var(--border)' }}>
@@ -127,24 +127,24 @@ const Sidebar: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        <p className="text-[10px] font-semibold tracking-widest uppercase px-3 mb-3" style={{ color: 'var(--muted)' }}>Navigation</p>
+      <nav className="flex-1 px-3 py-2 md:py-4 flex flex-row md:flex-col overflow-x-auto md:overflow-hidden gap-1 md:space-y-1 scrollbar-hide">
+        <p className="hidden md:block text-[10px] font-semibold tracking-widest uppercase px-3 mb-3 shrink-0" style={{ color: 'var(--muted)' }}>Navigation</p>
         {navItems.map((item) => {
           const active = loc.pathname === item.to;
           return (
-            <Link key={item.to} to={item.to} className={`nav-item ${active ? 'active' : ''}`}>
+            <Link key={item.to} to={item.to} className={`nav-item whitespace-nowrap !px-3 !py-2 md:!py-2.5 shrink-0 ${active ? 'active' : ''}`}>
               <span className={active ? 'text-violet-400' : ''}>{item.icon}</span>
-              {item.label}
+              <span className="hidden sm:inline">{item.label}</span>
             </Link>
           );
         })}
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t" style={{ borderColor: 'var(--border)' }}>
-        <button onClick={onLogout} className="nav-item w-full text-left hover:text-red-400 hover:bg-red-500/8">
+      <div className="px-3 py-2 md:py-4 border-t" style={{ borderColor: 'var(--border)' }}>
+        <button onClick={onLogout} className="nav-item w-full text-left hover:text-red-400 hover:bg-red-500/8 justify-center md:justify-start">
           <Icons.logout />
-          Sign Out
+          <span className="hidden md:inline">Sign Out</span>
         </button>
       </div>
     </aside>
@@ -199,11 +199,11 @@ const Dashboard: React.FC = () => {
     : candidates.filter(c => c.status.toLowerCase() === activeTab);
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden" style={{ background: 'var(--bg)' }}>
       <Sidebar onLogout={logout} />
 
       {/* Main content */}
-      <div className="flex-1 ml-56 flex flex-col overflow-hidden">
+      <div className="flex-1 md:ml-56 flex flex-col overflow-hidden w-full">
 
         {/* Top bar */}
         <div className="h-14 border-b px-8 flex items-center justify-between shrink-0"
@@ -317,7 +317,7 @@ const Dashboard: React.FC = () => {
                 <p className="text-xs" style={{ color: 'var(--text-dim)' }}>Share the landing page for applicants to begin.</p>
               </div>
             ) : (
-              <div className="card overflow-hidden">
+              <div className="card overflow-x-auto border" style={{ borderColor: 'var(--border)' }}>
                 <table className="w-full">
                   <thead>
                     <tr className="border-b text-[11px] font-semibold uppercase tracking-wider" style={{ borderColor: 'var(--border)', color: 'var(--text-dim)', background: 'var(--surface-2)' }}>

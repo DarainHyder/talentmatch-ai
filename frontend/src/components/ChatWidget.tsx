@@ -215,7 +215,7 @@ const ChatWidget: React.FC = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
 
       {/* ─── Chat Panel ─────────────────────────────────────────────────────── */}
       <AnimatePresence>
@@ -226,7 +226,7 @@ const ChatWidget: React.FC = () => {
             animate={{ opacity: 1, y: 0,  scale: 1    }}
             exit={{   opacity: 0, y: 24, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 340, damping: 30 }}
-            className="w-[388px] h-[560px] flex flex-col rounded-2xl overflow-hidden border border-white/8 shadow-2xl"
+            className="w-[calc(100vw-2rem)] sm:w-[388px] h-[calc(100vh-6rem)] sm:h-[560px] max-h-[85vh] flex flex-col rounded-2xl overflow-hidden border border-white/8 shadow-2xl"
             style={{
               background: 'linear-gradient(180deg, #0f172a 0%, #0a0f1e 100%)',
               boxShadow: '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',

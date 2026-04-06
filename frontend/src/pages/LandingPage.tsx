@@ -168,7 +168,7 @@ const LandingPage: React.FC = () => {
 
       {/* ══ METRICS ═══════════════════════════════════════════════════════════ */}
       <section className="relative z-10 py-16 px-8 border-y" style={{ borderColor: 'var(--border)' }}>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-px" style={{ background: 'var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-px" style={{ background: 'var(--border)', borderRadius: 16, overflow: 'hidden' }}>
           {[
             { value: '< 30s', label: 'CV Analysis'      },
             { value: '6',     label: 'Interview Questions'},
