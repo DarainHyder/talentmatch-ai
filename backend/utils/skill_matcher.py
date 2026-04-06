@@ -248,15 +248,68 @@ def match_skills(
         }
 
     cv_text_lower = cv_text.lower()
-    cv_lemmas     = _lemmatize_text(cv_text)
+    
+    # --- GEMINI SEMANTIC EXTRACTION ---
+    api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
+    api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
+    
+    if api_keys:
+        prompt = f"""You are an elite ATS (Applicant Tracking System) recruiter.
+Evaluate the candidate's CV strictly against the Job Description and the Required Skills. Provide a true semantic match (e.g. if skill is 'Frontend', and CV says 'React', that counts as a match).
 
+Job Description: {job_description_text}
+Required Skills: {', '.join(required_skills_list)}
+CV Text: {cv_text[:3000].replace('\n', ' ')}
+
+Analyze the capability of the candidate. Rate them 0-100. Be strict but semantically intelligent.
+Return ONLY valid JSON format exactly matching the schema below:
+{{
+    "cv_score": 85.0,
+    "matched_skills": ["skill1", "skill2"],
+    "missing_skills": ["skill3"]
+}}"""
+
+        for attempt, key in enumerate(api_keys):
+            try:
+                import google.generativeai as genai
+                import json
+                genai.configure(api_key=key)
+                model = genai.GenerativeModel("gemini-1.5-flash")
+                
+                response = model.generate_content(prompt)
+                raw_text = response.text.strip()
+                
+                if raw_text.startswith("```"):
+                    raw_text = raw_text.split("```")[1]
+                    if raw_text.startswith("json"):
+                        raw_text = raw_text[4:]
+                    raw_text = raw_text.strip()
+                
+                data = json.loads(raw_text)
+                return {
+                    "matched_skills": data.get("matched_skills", []),
+                    "missing_skills": data.get("missing_skills", []),
+                    "skill_match_percent": data.get("cv_score", 0.0),
+                    "tfidf_similarity": 100.0,
+                    "experience_bonus": 100.0,
+                    "cv_score": float(data.get("cv_score", 0.0))
+                }
+            except Exception as e:
+                err_msg = str(e).lower()
+                if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:
+                    if attempt < len(api_keys) - 1:
+                        continue
+                print(f"[skill_matcher] Gemini failed ({e}), falling back to heuristic math.")
+                break # Fallback to heuristic
+                
+    # --- FALLBACK: HEURISTIC MATCHING ---
+    cv_lemmas = _lemmatize_text(cv_text)
     matched:     List[str]   = []
     missing:     List[str]   = []
     confidences: List[float] = []
 
     for skill in required_skills_list:
-        if not skill.strip():
-            continue
+        if not skill.strip(): continue
         found, conf = _skill_present(skill, cv_lemmas, cv_text_lower)
         if found:
             matched.append(skill)
@@ -265,31 +318,18 @@ def match_skills(
             missing.append(skill)
 
     total = len([s for s in required_skills_list if s.strip()])
-
-    # Weighted skill score: average confidence × match ratio
     if total > 0 and confidences:
         avg_conf          = sum(confidences) / len(confidences)
         raw_match_ratio   = len(matched) / total
-        # Penalise low confidence slightly
         skill_match_pct   = round(raw_match_ratio * avg_conf * 100, 2)
     else:
         skill_match_pct   = 0.0
 
-    # TF-IDF semantic similarity
-    jd_for_tfidf    = job_description_text.strip() or " ".join(required_skills_list)
-    raw_sim         = _tfidf_similarity(cv_text, jd_for_tfidf)
-    tfidf_score     = round(raw_sim * 100, 2)
+    jd_for_tfidf = job_description_text.strip() or " ".join(required_skills_list)
+    tfidf_score  = round(_tfidf_similarity(cv_text, jd_for_tfidf) * 100, 2)
+    exp_bonus    = round(_experience_years(cv_text), 2)
 
-    # Experience bonus
-    exp_bonus = round(_experience_years(cv_text), 2)
-
-    # Composite score  (weights sum to 1.0)
-    cv_score = round(
-        skill_match_pct * 0.50 +
-        tfidf_score     * 0.30 +
-        exp_bonus       * 0.20,
-        2,
-    )
+    cv_score = round(skill_match_pct * 0.50 + tfidf_score * 0.30 + exp_bonus * 0.20, 2)
 
     return {
         "matched_skills":      matched,

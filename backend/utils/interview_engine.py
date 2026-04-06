@@ -126,22 +126,17 @@ def generate_questions(
     -------
     list of 6 question strings
     """
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
+    api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
 
-    if not api_key:
+    if not api_keys:
         print("[interview_engine] GEMINI_API_KEY not set — using default questions.")
         return _DEFAULT_QUESTIONS[:6]
 
-    try:
-        import google.generativeai as genai
+    skills_str = ", ".join(matched_skills) if matched_skills else "general skills"
+    cv_snippet = cv_text[:500].replace("\n", " ")
 
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
-
-        skills_str = ", ".join(matched_skills) if matched_skills else "general skills"
-        cv_snippet = cv_text[:500].replace("\n", " ")
-
-        prompt = f"""You are a technical recruiter. Given this candidate's CV and job description, generate exactly 6 interview questions.
+    prompt = f"""You are a technical recruiter. Given this candidate's CV and job description, generate exactly 6 interview questions.
 
 Job Title: {job_title}
 Job Description: {job_description}
@@ -154,30 +149,47 @@ Rules:
 - Return ONLY a JSON array of 6 question strings, nothing else
 - Example format: ["Question 1?", "Question 2?", ...]"""
 
-        response = model.generate_content(prompt)
-        raw_text = response.text.strip()
+    for attempt, key in enumerate(api_keys):
+        try:
+            import google.generativeai as genai
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel("gemini-1.5-flash")
 
-        # Strip markdown code fences if Gemini wraps in ```json ... ```
-        if raw_text.startswith("```"):
-            raw_text = raw_text.split("```")[1]
-            if raw_text.startswith("json"):
-                raw_text = raw_text[4:]
-            raw_text = raw_text.strip()
+            response = model.generate_content(prompt)
+            raw_text = response.text.strip()
 
-        questions = json.loads(raw_text)
+            # Strip markdown code fences if Gemini wraps in ```json ... ```
+            if raw_text.startswith("```"):
+                raw_text = raw_text.split("```")[1]
+                if raw_text.startswith("json"):
+                    raw_text = raw_text[4:]
+                raw_text = raw_text.strip()
 
-        if not isinstance(questions, list):
-            raise ValueError("Gemini response is not a JSON list.")
+            questions = json.loads(raw_text)
 
-        # Normalise: ensure we always have exactly 6
-        questions = [str(q) for q in questions if str(q).strip()]
-        if len(questions) < 6:
-            questions += _DEFAULT_QUESTIONS[: 6 - len(questions)]
-        return questions[:6]
+            if not isinstance(questions, list):
+                raise ValueError("Gemini response is not a JSON list.")
 
-    except Exception as e:
-        print(f"[interview_engine] Gemini error: {e} — falling back to default questions.")
-        return _DEFAULT_QUESTIONS[:6]
+            # Normalise: ensure we always have exactly 6
+            questions = [str(q) for q in questions if str(q).strip()]
+            if len(questions) < 6:
+                questions += _DEFAULT_QUESTIONS[: 6 - len(questions)]
+            return questions[:6]
+
+        except Exception as e:
+            err_msg = str(e).lower()
+            if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:
+                if attempt < len(api_keys) - 1:
+                    print(f"[interview_engine] Key {attempt+1} exhausted. Trying next key...")
+                    continue
+                else:
+                    print("[interview_engine] All Gemini keys exhausted! Falling back to default questions.")
+                    return _DEFAULT_QUESTIONS[:6]
+            else:
+                print(f"[interview_engine] Gemini error: {e} — falling back to default questions.")
+                return _DEFAULT_QUESTIONS[:6]
+                
+    return _DEFAULT_QUESTIONS[:6]
 
 
 def needs_followup(answer_text: str) -> bool:
