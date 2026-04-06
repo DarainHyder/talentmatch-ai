@@ -28,29 +28,50 @@ from typing import List, Dict
 # ---------------------------------------------------------------------------
 
 _SYNONYMS: Dict[str, List[str]] = {
-    "machine learning":        ["ml", "statistical learning", "supervised learning", "unsupervised learning"],
-    "deep learning":           ["dl", "neural network", "neural networks", "ann", "cnn", "rnn", "lstm", "transformer"],
-    "natural language processing": ["nlp", "text mining", "text analytics", "computational linguistics"],
-    "python":                  ["py", "python3", "python 3", "python2"],
-    "javascript":              ["js", "es6", "ecmascript", "node.js", "nodejs"],
+    # Data & AI
+    "machine learning":        ["ml", "statistical learning", "supervised learning", "unsupervised learning", "predictive modeling"],
+    "deep learning":           ["dl", "neural network", "neural networks", "ann", "cnn", "rnn", "lstm", "transformer", "llm"],
+    "natural language processing": ["nlp", "text mining", "text analytics", "computational linguistics", "spacy", "nltk"],
+    "artificial intelligence": ["ai", "intelligent systems", "generative ai", "genai"],
+    "data science":            ["data analysis", "data analytics", "data scientist", "pandas", "numpy", "scikit-learn"],
+    "computer vision":         ["cv", "image processing", "object detection", "opencv"],
+    "data engineering":        ["etl", "data pipeline", "spark", "hadoop", "kafka", "airflow", "snowflake", "bigquery"],
+    
+    # Languages, Tools, & Frameworks
+    "python":                  ["py", "python3", "python 3", "python2", "django", "flask", "fastapi"],
+    "javascript":              ["js", "es6", "ecmascript", "node.js", "nodejs", "express", "express.js"],
     "typescript":              ["ts"],
-    "sql":                     ["mysql", "postgresql", "postgres", "sqlite", "mssql", "t-sql", "plsql"],
-    "nosql":                   ["mongodb", "cassandra", "couchdb", "dynamodb"],
-    "artificial intelligence": ["ai", "intelligent systems"],
-    "data science":            ["data analysis", "data analytics", "data scientist"],
-    "computer vision":         ["cv", "image processing", "object detection"],
-    "cloud":                   ["aws", "azure", "gcp", "google cloud", "amazon web services"],
-    "docker":                  ["containerisation", "containerization", "container"],
-    "kubernetes":              ["k8s", "container orchestration"],
-    "devops":                  ["ci/cd", "cicd", "continuous integration", "continuous deployment"],
-    "git":                     ["github", "gitlab", "bitbucket", "version control"],
-    "r":                       ["r language", "r programming"],
-    "tensorflow":              ["tf", "keras"],
-    "pytorch":                 ["torch"],
-    "react":                   ["reactjs", "react.js"],
-    "data engineering":        ["etl", "data pipeline", "spark", "hadoop", "kafka"],
-    "communication":           ["written communication", "verbal communication", "presentation"],
-    "leadership":              ["team lead", "managing teams", "management"],
+    "java":                    ["java 8", "java 11", "spring", "spring boot", "springboot"],
+    "c#":                      ["csharp", ".net", "dotnet", "asp.net", "entity framework"],
+    "c++":                     ["cpp", "cxx"],
+    "php":                     ["laravel", "symfony", "codeigniter"],
+    "ruby":                    ["ruby on rails", "rails"],
+    "go":                      ["golang"],
+    "rust":                    ["rustlang"],
+    
+    # Frontend
+    "frontend":                ["front end", "front-end", "ui development", "react", "angular", "vue", "html", "css", "tailwind", "bootstrap"],
+    "react":                   ["reactjs", "react.js", "next.js", "nextjs"],
+    "angular":                 ["angularjs"],
+    "vue":                     ["vuejs", "vue.js", "nuxt"],
+    
+    # Backend & DB
+    "backend":                 ["back end", "back-end", "server side", "api development", "restful", "graphql", "microservices"],
+    "sql":                     ["mysql", "postgresql", "postgres", "sqlite", "mssql", "t-sql", "plsql", "relational database"],
+    "nosql":                   ["mongodb", "cassandra", "couchdb", "dynamodb", "redis", "firebase"],
+    
+    # Ops & Cloud
+    "cloud":                   ["aws", "azure", "gcp", "google cloud", "amazon web services", "cloud computing"],
+    "docker":                  ["containerisation", "containerization", "container", "containers"],
+    "kubernetes":              ["k8s", "container orchestration", "helm", "minikube"],
+    "devops":                  ["ci/cd", "cicd", "continuous integration", "continuous deployment", "jenkins", "github actions", "gitlab ci", "terraform", "ansible"],
+    "git":                     ["github", "gitlab", "bitbucket", "version control", "vcs"],
+    
+    # Design & Project Management
+    "agile":                   ["scrum", "kanban", "sprints", "jira"],
+    "ui/ux":                   ["user interface", "user experience", "figma", "wireframing", "prototyping", "adobe xd"],
+    "leadership":              ["team lead", "managing teams", "management", "mentoring", "project management"],
+    "communication":           ["written communication", "verbal communication", "presentation", "cross-functional"]
 }
 
 # Build reverse map: synonym → canonical
