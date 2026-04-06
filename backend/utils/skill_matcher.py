@@ -275,12 +275,13 @@ def match_skills(
     api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
     
     if api_keys:
+        cv_clean = cv_text[:3000].replace('\n', ' ')
         prompt = f"""You are an elite ATS (Applicant Tracking System) recruiter.
 Evaluate the candidate's CV strictly against the Job Description and the Required Skills. Provide a true semantic match (e.g. if skill is 'Frontend', and CV says 'React', that counts as a match).
 
 Job Description: {job_description_text}
 Required Skills: {', '.join(required_skills_list)}
-CV Text: {cv_text[:3000].replace('\n', ' ')}
+CV Text: {cv_clean}
 
 Analyze the capability of the candidate. Rate them 0-100. Be strict but semantically intelligent.
 Return ONLY valid JSON format exactly matching the schema below:
