@@ -40,6 +40,12 @@ def create_app() -> Flask:
     ]
     custom_origin = os.getenv("FRONTEND_URL", "").strip()
     if custom_origin:
+        # Auto-fix common typos in WSGI configuration
+        if custom_origin.endswith("/"):
+            custom_origin = custom_origin[:-1]
+        if not custom_origin.startswith("http"):
+            custom_origin = f"https://{custom_origin}"
+            
         allowed_origins.append(custom_origin)
 
     CORS(app, resources={r"/api/*": {"origins": allowed_origins}},
