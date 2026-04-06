@@ -20,6 +20,7 @@ We expose is_qualified(score, threshold=60.0).
 
 from __future__ import annotations
 import re
+import os
 from difflib import SequenceMatcher
 from typing import List, Dict
 
