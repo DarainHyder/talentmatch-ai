@@ -230,8 +230,8 @@ def _experience_years(cv_text: str) -> float:
 # Public API
 # ---------------------------------------------------------------------------
 
-# Default CV screening threshold (widely adopted in ATS / HR-tech research)
-CV_THRESHOLD: float = 60.0
+# Default CV screening threshold (Lowered for presentation demo)
+CV_THRESHOLD: float = 30.0
 
 
 def match_skills(
@@ -270,13 +270,13 @@ def match_skills(
         }
 
     cv_text_lower = cv_text.lower()
+    cv_clean = cv_text[:3000].replace('\n', ' ')
     
     # --- GEMINI SEMANTIC EXTRACTION ---
     api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
     api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
     
     if api_keys:
-        cv_clean = cv_text[:3000].replace('\n', ' ')
         prompt = f"""You are an elite ATS (Applicant Tracking System) recruiter.
 Evaluate the candidate's CV strictly against the Job Description and the Required Skills. Provide a true semantic match (e.g. if skill is 'Frontend', and CV says 'React', that counts as a match).
 
@@ -294,12 +294,15 @@ Return ONLY valid JSON format exactly matching the schema below:
 
         for attempt, key in enumerate(api_keys):
             try:
-                import google.generativeai as genai
+                from google import genai
                 import json
-                genai.configure(api_key=key)
-                model = genai.GenerativeModel("gemini-1.5-flash")
                 
-                response = model.generate_content(prompt)
+                client = genai.Client(api_key=key)
+                response = client.models.generate_content(
+                    model="gemini-2.0-flash",
+                    contents=prompt
+                )
+                
                 raw_text = response.text.strip()
                 
                 # Strip markdown blocks if present
@@ -319,11 +322,9 @@ Return ONLY valid JSON format exactly matching the schema below:
                     "method": "gemini-ai"
                 }
             except Exception as e:
-                err_msg = str(e).lower()
-                if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:
-                    if attempt < len(api_keys) - 1:
-                        continue
-                print(f"[skill_matcher] Gemini failed ({e}), falling back to heuristic math.")
+                print(f"[skill_matcher] Gemini failed ({e}), attempting next key or fallback.")
+                if attempt < len(api_keys) - 1:
+                    continue
                 break # Fallback to heuristic
                 
     # --- FALLBACK: HEURISTIC MATCHING ---

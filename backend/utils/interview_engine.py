@@ -151,31 +151,31 @@ Rules:
 
     for attempt, key in enumerate(api_keys):
         try:
-            import google.generativeai as genai
-            genai.configure(api_key=key)
-            model = genai.GenerativeModel("gemini-1.5-flash")
-
-            response = model.generate_content(prompt)
+            from google import genai
+            import json
+            
+            client = genai.Client(api_key=key)
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt
+            )
+            
             raw_text = response.text.strip()
-
-            # Strip markdown code fences if Gemini wraps in ```json ... ```
-            if raw_text.startswith("```"):
-                raw_text = raw_text.split("```")[1]
-                if raw_text.startswith("json"):
-                    raw_text = raw_text[4:]
-                raw_text = raw_text.strip()
-
+            # Strip markdown blocks if present
+            if "```json" in raw_text:
+                raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in raw_text:
+                raw_text = raw_text.split("```")[1].split("```")[0].strip()
+            
             questions = json.loads(raw_text)
-
-            if not isinstance(questions, list):
-                raise ValueError("Gemini response is not a JSON list.")
-
-            # Normalise: ensure we always have exactly 6
-            questions = [str(q) for q in questions if str(q).strip()]
-            if len(questions) < 6:
-                questions += _DEFAULT_QUESTIONS[: 6 - len(questions)]
-            return questions[:6]
-
+            if isinstance(questions, list) and len(questions) > 0:
+                print(f"[interview_engine] Generated {len(questions)} questions using Gemini-2.0.")
+                
+                # Normalise: ensure we always have exactly 6
+                questions = [str(q) for q in questions if str(q).strip()]
+                if len(questions) < 6:
+                    questions += _DEFAULT_QUESTIONS[: 6 - len(questions)]
+                return questions[:6]
         except Exception as e:
             err_msg = str(e).lower()
             if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:
