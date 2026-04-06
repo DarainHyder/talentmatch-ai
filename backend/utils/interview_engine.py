@@ -21,10 +21,7 @@ _DEFAULT_QUESTIONS = [
     "What motivated you to apply for this role?",
     "Describe a challenging technical problem you solved recently.",
     "How do you approach learning new technologies or frameworks?",
-    "Give an example of a project where you worked in a team. What was your role?",
-    "What is your greatest professional achievement so far?",
-    "How do you handle tight deadlines and competing priorities?",
-    "Where do you see yourself professionally in the next 3–5 years?",
+    "What is your greatest professional achievement so far?"
 ]
 
 # ---------------------------------------------------------------------------
@@ -146,7 +143,7 @@ CV Summary: {cv_snippet}
 Rules:
 - Questions must be specific to this candidate's background
 - Mix technical and behavioral questions
-- Return ONLY a JSON array of 6 question strings, nothing else
+- Return ONLY a JSON array of exactly 5 question strings, nothing else
 - Example format: ["Question 1?", "Question 2?", ...]"""
 
     for attempt, key in enumerate(api_keys):
@@ -171,11 +168,11 @@ Rules:
             if isinstance(questions, list) and len(questions) > 0:
                 print(f"[interview_engine] Generated {len(questions)} questions using Gemini-2.0.")
                 
-                # Normalise: ensure we always have exactly 6
+                # Normalise: ensure we always have exactly 5
                 questions = [str(q) for q in questions if str(q).strip()]
-                if len(questions) < 6:
-                    questions += _DEFAULT_QUESTIONS[: 6 - len(questions)]
-                return questions[:6]
+                if len(questions) < 5:
+                    questions += _DEFAULT_QUESTIONS[: 5 - len(questions)]
+                return questions[:5]
         except Exception as e:
             err_msg = str(e).lower()
             if "429" in err_msg or "quota" in err_msg or "exhausted" in err_msg:

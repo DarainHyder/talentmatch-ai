@@ -152,6 +152,9 @@ def chat_start():
     except Exception as e:
         return jsonify({"error": f"Question generation failed: {str(e)}"}), 500
 
+    # Ensure exactly 5 questions
+    question_list = question_list[:5]
+
     # --- Create session (also inserts candidate to DB) ---
     try:
         sid = session_store.create_session(
@@ -227,13 +230,15 @@ def chat_message():
 
     # --- Follow-up logic ---
     awaiting = sess.get("awaiting_followup", False)
-    if needs_followup(message) and not awaiting:
+    
+    if not awaiting and needs_followup(message):
+        # Trigger a follow-up: stay on the SAME main question index
         session_store.update_session(session_id, awaiting_followup=True)
         followup = get_followup(message)
         session_store.append_to_transcript(session_id, "bot", followup)
         return jsonify({"done": False, "question": followup}), 200
 
-    # Reset follow-up flag and advance question index
+    # Advance to the next real question from question_list
     next_idx = current_idx + 1
     session_store.update_session(
         session_id,
@@ -241,8 +246,8 @@ def chat_message():
         current_question_index=next_idx,
     )
 
-    # --- Check if interview is complete ---
-    if next_idx >= len(question_list):
+    # --- Check if interview is complete (exactly 5 questions) ---
+    if next_idx >= 5 or next_idx >= len(question_list):
         transcript = session_store.get_transcript(session_id)
         cv_score   = sess.get("cv_score", 0.0)
 
