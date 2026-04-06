@@ -284,7 +284,7 @@ Job Description: {job_description_text}
 Required Skills: {', '.join(required_skills_list)}
 CV Text: {cv_clean}
 
-Analyze the capability of the candidate. Rate them 0-100. Be strict but semantically intelligent.
+Analyze the capability of the candidate. Rate them 0-100. Be semantically intelligent and recognize synonyms.
 Return ONLY valid JSON format exactly matching the schema below:
 {{
     "cv_score": 85.0,
@@ -302,20 +302,21 @@ Return ONLY valid JSON format exactly matching the schema below:
                 response = model.generate_content(prompt)
                 raw_text = response.text.strip()
                 
-                if raw_text.startswith("```"):
-                    raw_text = raw_text.split("```")[1]
-                    if raw_text.startswith("json"):
-                        raw_text = raw_text[4:]
-                    raw_text = raw_text.strip()
+                # Strip markdown blocks if present
+                if "```json" in raw_text:
+                    raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in raw_text:
+                    raw_text = raw_text.split("```")[1].split("```")[0].strip()
                 
                 data = json.loads(raw_text)
+                final_score = float(data.get("cv_score", 0.0))
+                print(f"DEBUG: CV Score Analysis => {final_score}")
+                
                 return {
                     "matched_skills": data.get("matched_skills", []),
                     "missing_skills": data.get("missing_skills", []),
-                    "skill_match_percent": data.get("cv_score", 0.0),
-                    "tfidf_similarity": 100.0,
-                    "experience_bonus": 100.0,
-                    "cv_score": float(data.get("cv_score", 0.0))
+                    "cv_score": final_score,
+                    "method": "gemini-ai"
                 }
             except Exception as e:
                 err_msg = str(e).lower()
