@@ -4,12 +4,12 @@ import { Link } from 'react-router-dom';
 
 const LandingPage: React.FC = () => {
   return (
-    <div className="bg-navy-900 min-h-screen overflow-hidden">
+    <div className="bg-slate-50 min-h-screen overflow-hidden">
       {/* ─── Hero Section ─────────────────────────────────────────────────── */}
       <section className="relative min-h-[100vh] flex items-center pt-20">
-        {/* Background glow effects */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] -z-10 rounded-full" />
-        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-purple-600/5 blur-[120px] -z-10 rounded-full" />
+        {/* Background glow effects - Light Cyan */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-100 blur-[120px] -z-10 rounded-full opacity-60" />
+        <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-sky-100 blur-[120px] -z-10 rounded-full opacity-60" />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div 
@@ -21,18 +21,18 @@ const LandingPage: React.FC = () => {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-navy-800 border border-white/10 mb-8"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 mb-8 shadow-sm"
             >
-              <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse shadow-[0_0_10px_#7c3aed]" />
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-widest leading-none">New Demo Available</span>
+              <span className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse shadow-[0_0_10px_#06b6d4]" />
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest leading-none">New Demo Available</span>
             </motion.div>
 
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] mb-8 tracking-tighter">
+            <h1 className="text-6xl md:text-8xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tighter">
               Smarter Hiring <br/>
-              <span className="text-glow text-purple-400">Starts Here.</span>
+              <span className="text-glow">Starts Here.</span>
             </h1>
             
-            <p className="text-xl text-slate-400 font-medium leading-relaxed max-w-xl mb-12">
+            <p className="text-xl text-slate-500 font-medium leading-relaxed max-w-xl mb-12">
               An AI-powered recruitment assistant that screens resumes, chats with candidates, and delivers instant, unbiased evaluations.
             </p>
 
@@ -49,259 +49,124 @@ const LandingPage: React.FC = () => {
             </div>
           </motion.div>
 
-             <div className="relative h-[650px] w-full flex items-center justify-center lg:block">
-                {/* Cinematic Ambient Glows */}
-                <div className="bg-glow w-[400px] h-[400px] top-0 -right-20 opacity-30" />
-                <div className="bg-glow w-[300px] h-[300px] bottom-0 -left-10 opacity-20" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)' }} />
+          <div className="relative h-[650px] w-full flex items-center justify-center lg:block">
+            {/* Cinematic Ambient Glows - Cyan/Sky */}
+            <div className="bg-glow w-[400px] h-[400px] top-0 -right-20 opacity-30" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
+            <div className="bg-glow w-[300px] h-[300px] bottom-0 -left-10 opacity-20" style={{ background: 'radial-gradient(circle, #0ea5e9 0%, transparent 70%)' }} />
 
-                {/* Main AI Core Card (Referencing Smart Hire's 30px rounding) */}
-                <motion.div 
-                   initial={{ y: 40, opacity: 0 }}
-                   animate={{ y: 0, opacity: 1 }}
-                   transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-                   className="relative z-10 glass-card p-1 items-center justify-center max-w-[550px] mx-auto lg:ml-auto shadow-[0_30px_100px_-20px_rgba(139,92,246,0.3)]"
-                >
-                   <div className="bg-navy-900/60 rounded-[30px] p-10 overflow-hidden relative group aspect-square flex items-center justify-center">
-                      {/* Active AI Scanning Field */}
-                      <motion.div 
-                         animate={{ top: ['-10%', '110%', '-10%'] }}
-                         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                         className="absolute left-0 right-0 h-24 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent z-20 pointer-events-none"
-                      />
+            {/* Main AI Core Card (Referencing Smart Hire's 30px rounding) */}
+            <motion.div 
+               initial={{ y: 40, opacity: 0 }}
+               animate={{ y: 0, opacity: 1 }}
+               transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+               className="relative z-10 glass-card p-1 items-center justify-center max-w-[550px] mx-auto lg:ml-auto shadow-[0_30px_100px_-20px_rgba(6,182,212,0.2)]"
+            >
+               <div className="bg-white rounded-[30px] p-10 overflow-hidden relative group aspect-square flex items-center justify-center">
+                  {/* Active AI Scanning Field - Cyan */}
+                  <motion.div 
+                     animate={{ top: ['-10%', '110%', '-10%'] }}
+                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                     className="absolute left-0 right-0 h-24 bg-gradient-to-b from-transparent via-cyan-500/10 to-transparent z-20 pointer-events-none"
+                  />
 
-                      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 filter drop-shadow(0 0 20px rgba(139,92,246,0.4))">
-                         <defs>
-                           <filter id="glow">
-                             <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
-                             <feMerge>
-                               <feMergeNode in="coloredBlur"/>
-                               <feMergeNode in="SourceGraphic"/>
-                             </feMerge>
-                           </filter>
-                         </defs>
+                  <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 filter drop-shadow(0 0 20px rgba(6,182,212,0.2))">
+                     <defs>
+                       <filter id="glow-light">
+                         <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                         <feMerge>
+                           <feMergeNode in="coloredBlur"/>
+                           <feMergeNode in="SourceGraphic"/>
+                         </feMerge>
+                       </filter>
+                     </defs>
 
-                         {/* Kinetic Node Network */}
-                         {[...Array(6)].map((_, i) => (
-                           <motion.g 
-                             key={i}
-                             animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
-                             transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
-                             style={{ originX: '100px', originY: '100px' }}
-                           >
-                             <circle 
-                               cx="100" cy="100" 
-                               r={40 + i * 15} 
-                               stroke={i % 2 === 0 ? "#8b5cf6" : "#d946ef"} 
-                               strokeWidth="0.5" 
-                               fill="none" 
-                               strokeDasharray={i % 3 === 0 ? "5 10" : "20 5"} 
-                               opacity={0.1 + (i * 0.05)} 
-                             />
-                             {/* Floating Nodes on Rings */}
-                             <motion.circle 
-                               cx={100 + (40 + i * 15)} 
-                               cy="100" 
-                               r="3" 
-                               fill={i % 2 === 0 ? "#8b5cf6" : "#d946ef"} 
-                               filter="url(#glow)"
-                               animate={{ scale: [1, 1.5, 1] }}
-                               transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
-                             />
-                           </motion.g>
+                     {/* Kinetic Node Network - Cyan/Sky */}
+                     {[...Array(6)].map((_, i) => (
+                       <motion.g 
+                         key={i}
+                         animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+                         transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
+                         style={{ originX: '100px', originY: '100px' }}
+                       >
+                         <circle 
+                           cx="100" cy="100" 
+                           r={40 + i * 15} 
+                           stroke={i % 2 === 0 ? "#06b6d4" : "#0ea5e9"} 
+                           strokeWidth="0.5" 
+                           fill="none" 
+                           strokeDasharray={i % 3 === 0 ? "5 10" : "20 5"} 
+                           opacity={0.1 + (i * 0.05)} 
+                         />
+                         {/* Floating Nodes on Rings */}
+                         {[...Array(3)].map((__, j) => (
+                            <motion.circle
+                              key={j}
+                              cx={100 + (40 + i * 15) * Math.cos(j * (2 * Math.PI / 3))}
+                              cy={100 + (40 + i * 15) * Math.sin(j * (2 * Math.PI / 3))}
+                              r="1.5"
+                              fill={i % 2 === 0 ? "#06b6d4" : "#0ea5e9"}
+                              filter="url(#glow-light)"
+                            >
+                              <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite" begin={`${j * 0.5}s`} />
+                            </motion.circle>
                          ))}
+                       </motion.g>
+                     ))}
 
-                         {/* Central Intelligent Core */}
-                         <motion.circle 
-                           cx="100" cy="100" r="20" 
-                           fill="url(#purpleGrad)"
-                           animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.8, 1, 0.8] }}
-                           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                         />
-                         
-                         <defs>
-                           <radialGradient id="purpleGrad" cx="50%" cy="50%" r="50%">
-                             <stop offset="0%" stopColor="#d946ef" />
-                             <stop offset="100%" stopColor="#8b5cf6" />
-                           </radialGradient>
-                         </defs>
-
-                         {/* Connecting Synaptic Lines */}
-                         <motion.path 
-                           d="M100 100 L140 60 M100 100 L60 140 M100 100 L140 140 M100 100 L60 60" 
-                           stroke="#8b5cf6" strokeWidth="1" 
-                           strokeDasharray="100"
-                           animate={{ strokeDashoffset: [200, 0] }}
-                           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                           opacity="0.3"
-                         />
-                      </svg>
-
-                      {/* Real-time Processing HUD */}
-                      <div className="absolute top-8 left-8 flex flex-col gap-2">
-                         <div className="flex items-center gap-2">
-                            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                            <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Neural Link: Active</span>
-                         </div>
-                         <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <motion.div 
-                              animate={{ x: ['-100%', '100%'] }}
-                              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                              className="w-1/2 h-full bg-purple-500" 
-                            />
-                         </div>
-                      </div>
-                   </div>
-                </motion.div>
-             </div>
-        </div>
-      </section>
-
-      {/* ─── Section 2: Features ─────────────────────────────────────────── */}
-      <section className="bg-navy-800 py-32 relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <h2 className="section-title">The Future of Recruitment</h2>
-            <div className="w-24 h-1.5 bg-purple-gradient mx-auto rounded-full" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Save Time', desc: 'Stop spending hours on resumes. Our AI scans and shortlists candidates instantly with high precision.' },
-              { icon: 'M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z', title: 'Stress-Free Interviews', desc: 'Friendly AI chat-based interviews let candidates showcase their technical skills comfortably.' },
-              { icon: 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', title: 'Fast, Fair Decisions', desc: 'AI analyzes responses objectively based on merit, ensuring faster and unbiased hiring decisions.' }
-            ].map((card, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.15 }}
-                viewport={{ once: true }}
-                className="glass-card p-10 border-white/5 group hover:border-purple-500/30"
-              >
-                <div className="w-16 h-16 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-8 border border-purple-500/20 text-purple-400 transition-colors group-hover:bg-purple-500 group-hover:text-white">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
+                     {/* Center Core */}
+                     <motion.circle 
+                        cx="100" cy="100" r="22" 
+                        fill="url(#coreGradient)" 
+                        animate={{ scale: [1, 1.1, 1] }} 
+                        transition={{ duration: 4, repeat: Infinity }}
+                     />
+                     <defs>
+                        <radialGradient id="coreGradient">
+                           <stop offset="0%" stopColor="#22d3ee" />
+                           <stop offset="100%" stopColor="#06b6d4" />
+                        </radialGradient>
+                     </defs>
                   </svg>
-                </div>
-                <h3 className="text-2xl font-bold text-white mb-4 tracking-tight">{card.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{card.desc}</p>
-              </motion.div>
-            ))}
+
+                  {/* Content Overlay */}
+                  <div className="absolute bottom-8 left-0 right-0 z-30 px-8 flex justify-center gap-3">
+                     {['SCANNED', 'ANALYZED', 'MATCHED'].map((tag, i) => (
+                        <div key={tag} className="px-3 py-1 bg-slate-100/80 border border-slate-200 rounded-lg text-[8px] font-black tracking-widest text-slate-500 backdrop-blur-md">
+                           {tag}
+                        </div>
+                     ))}
+                  </div>
+               </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* ─── Section 3: Vertical Process ─────────────────────────────────── */}
-      <section className="py-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl font-black text-white mb-8 tracking-tighter">Revolutionize Your <br/>Hiring Process.</h2>
-            <p className="text-xl text-slate-400 leading-relaxed mb-12">
-              Our end-to-end automation handles everything from resume extraction to deep candidate ranking, allowing you to focus on the top 1% of talent.
-            </p>
-            <Link to="/about" className="inline-flex items-center gap-2 text-purple-400 font-bold hover:text-purple-300 transition-all">
-              Learn about our technology
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
-          </motion.div>
-
-          <div className="space-y-10 relative">
-            {/* Step 1 */}
+      {/* ─── Features Brief ──────────────────────────────────────────────── */}
+      <section className="py-32 bg-white relative">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12">
+          {[
+            { title: "Agentic Screening", desc: "Autonomous AI agents that deep-scan CVs for true project competence.", icon: "M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 2.147L2.207 12.016a11.94 11.94 0 001.205 10.983c.951.555 2.005.959 3.127 1.184" },
+            { title: "Behavioral Intel", desc: "Real-time interviewing that adapts to candidate responses instantly.", icon: "M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4z" },
+            { title: "Bias-Free Matrix", desc: "Fair scoring based on data-driven matching nodes.", icon: "M9 19V5l12-3v14l-12 3z" }
+          ].map((f, i) => (
             <motion.div 
-               whileInView={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: 40 }}
-               className="flex gap-8 items-start group"
+               key={i}
+               initial={{ y: 20, opacity: 0 }}
+               whileInView={{ y: 0, opacity: 1 }}
+               viewport={{ once: true }}
+               className="p-10 rounded-[30px] bg-slate-50 border border-slate-100 hover:shadow-2xl hover:shadow-cyan-500/10 transition-all group"
             >
-               <div className="w-12 h-12 rounded-full bg-navy-800 border-2 border-purple-500 flex items-center justify-center text-purple-400 font-black shrink-0 shadow-[0_0_20px_rgba(124,58,237,0.3)]">1</div>
-               <div>
-                 <h4 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-purple-400 transition-colors">Resume Scan</h4>
-                 <p className="text-slate-400">Upload a CV and the system instantly extracts skills, experience, and key strengths using NLP.</p>
-               </div>
+              <div className="w-14 h-14 bg-white rounded-2x flex items-center justify-center mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                <svg className="w-7 h-7 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={f.icon} />
+                </svg>
+              </div>
+              <h3 className="text-xl font-black text-slate-800 mb-4 tracking-tight">{f.title}</h3>
+              <p className="text-slate-500 font-medium leading-relaxed">{f.desc}</p>
             </motion.div>
-            {/* Step 2 */}
-            <motion.div 
-               whileInView={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: 40 }} transition={{ delay: 0.1 }}
-               className="flex gap-8 items-start group"
-            >
-               <div className="w-12 h-12 rounded-full bg-navy-800 border-2 border-purple-500 flex items-center justify-center text-purple-400 font-black shrink-0 shadow-[0_0_20px_rgba(124,58,237,0.3)]">2</div>
-               <div>
-                 <h4 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-purple-400 transition-colors">AI Chat Interview</h4>
-                 <p className="text-slate-400">Candidates answer personalized, relevant questions through a smart and friendly chat interface.</p>
-               </div>
-            </motion.div>
-            {/* Step 3 */}
-            <motion.div 
-               whileInView={{ opacity: 1, x: 0 }} initial={{ opacity: 0, x: 40 }} transition={{ delay: 0.2 }}
-               className="flex gap-8 items-start group"
-            >
-               <div className="w-12 h-12 rounded-full bg-navy-800 border-2 border-purple-500 flex items-center justify-center text-purple-400 font-black shrink-0 shadow-[0_0_20px_rgba(124,58,237,0.3)]">3</div>
-               <div>
-                 <h4 className="text-xl font-bold text-white mb-2 tracking-tight group-hover:text-purple-400 transition-colors">Instant Ranking</h4>
-                 <p className="text-slate-400">Performance is automatically analyzed and candidates are ranked for immediate hiring decisions.</p>
-               </div>
-            </motion.div>
-            
-            {/* Connector Line */}
-            <div className="absolute top-12 left-6 w-0.5 h-[80%] bg-white/5 -z-10" />
-          </div>
+          ))}
         </div>
-      </section>
-
-      {/* ─── Section 4: Chat Mockups ─────────────────────────────────────── */}
-      <section className="bg-navy-800/50 py-32">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-20 whitespace-normal">
-            <h2 className="section-title">Meet Your Smart Hiring Assistant</h2>
-            <p className="section-subtitle">A natural, AI-driven conversational experience that gets to the heart of every candidate's expertise.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-5xl mx-auto mt-20">
-               <motion.div whileInView={{ scale: 1, opacity: 1 }} initial={{ scale: 0.9, opacity: 0 }} className="glass-card p-8 text-left border-white/5 space-y-4">
-                  <div className="flex gap-4 items-start">
-                     <div className="w-10 h-10 bg-purple-500/20 rounded-lg shrink-0 flex items-center justify-center text-purple-400 font-bold">B</div>
-                     <div className="bg-navy-800 p-4 rounded-2xl rounded-bl-sm text-sm text-slate-300 border border-white/5">How many years of experience do you have with Python backend development?</div>
-                  </div>
-                  <div className="flex gap-4 items-start flex-row-reverse text-right">
-                     <div className="w-10 h-10 bg-purple-gradient rounded-lg shrink-0 flex items-center justify-center text-white font-bold">C</div>
-                     <div className="bg-purple-gradient p-4 rounded-2xl rounded-br-sm text-sm text-white shadow-lg">I've worked on high-scale Django apps for over 5 years.</div>
-                  </div>
-               </motion.div>
-               <motion.div whileInView={{ scale: 1, opacity: 1 }} initial={{ scale: 0.9, opacity: 0 }} transition={{ delay: 0.2 }} className="glass-card p-8 text-left border-white/5 space-y-4">
-                  <div className="flex gap-4 items-start">
-                     <div className="w-10 h-10 bg-purple-500/20 rounded-lg shrink-0 flex items-center justify-center text-purple-400 font-bold">B</div>
-                     <div className="bg-navy-800 p-4 rounded-2xl rounded-bl-sm text-sm text-slate-300 border border-white/5">Excellent. Can you describe a complex system architecture you designed?</div>
-                  </div>
-                  <div className="bg-navy-800 p-2 rounded-2xl rounded-bl-sm w-12 flex justify-center gap-1 border border-white/5">
-                     <div className="w-1 h-1 bg-slate-500 rounded-full animate-bounce" />
-                     <div className="w-1 h-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.1s]" />
-                     <div className="w-1 h-1 bg-slate-500 rounded-full animate-bounce [animation-delay:-0.2s]" />
-                  </div>
-               </motion.div>
-            </div>
-         </div>
-      </section>
-
-      {/* ─── CTA Banner ──────────────────────────────────────────────────── */}
-      <section className="py-40">
-         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
-               whileInView={{ opacity: 1, y: 0 }} initial={{ opacity: 0, y: 40 }}
-               className="bg-purple-gradient rounded-[48px] p-16 md:p-24 text-center relative overflow-hidden shadow-2xl shadow-purple-500/20"
-            >
-               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 to-transparent" />
-               <h2 className="text-5xl md:text-7xl font-black text-white mb-10 leading-tight relative z-10 tracking-tight">Ready to Upgrade <br/>Your Hiring?</h2>
-               <p className="text-white/80 text-xl font-medium max-w-2xl mx-auto mb-16 relative z-10 leading-relaxed">Join innovative companies using TalentMatch AI to identify high-potential candidates in minutes, not weeks.</p>
-               <Link to="/chatbot" className="relative z-10 inline-flex items-center gap-3 bg-white text-purple-700 px-12 py-6 rounded-2xl font-black text-xl hover:scale-110 active:scale-95 transition-all shadow-xl">
-                  Try Demo Account
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                  </svg>
-               </Link>
-            </motion.div>
-         </div>
       </section>
     </div>
   );

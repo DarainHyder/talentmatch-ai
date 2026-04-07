@@ -15,8 +15,9 @@ const Header: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Platform', path: '/chatbot' },
-    { name: 'Intelligence', path: '/about' },
+    { name: 'Home', path: '/' },
+    { name: 'About', path: '/about' },
+    { name: 'Chatbot', path: '/chatbot' },
     { name: 'Dashboard', path: '/dashboard' },
   ];
 

@@ -184,7 +184,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
   };
 
   const panelStyles = inline 
-    ? "w-full max-w-[700px] h-[700px] rounded-[40px]"
+    ? "w-full max-w-[700px] h-[750px] rounded-[40px]"
     : "w-[calc(100vw-2rem)] sm:w-[450px] h-[calc(100vh-8rem)] sm:h-[650px] rounded-[40px]";
 
   const containerClasses = inline
@@ -200,26 +200,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
             animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
             exit={{ opacity: 0, y: 40, scale: 0.9, rotate: -2 }}
             transition={{ type: "spring", damping: 20, stiffness: 200 }}
-            className={`${panelStyles} flex flex-col bg-navy-900 border border-white/5 overflow-hidden shadow-[0_40px_100px_-20px_rgba(139,92,246,0.4)] backdrop-blur-3xl`}
+            className={`${panelStyles} flex flex-col bg-white border border-slate-100 overflow-hidden shadow-[0_40px_100px_-20px_rgba(6,182,212,0.15)] backdrop-blur-3xl`}
           >
             {/* Header */}
-            <div className="px-8 py-7 bg-navy-800/40 border-b border-white/5 flex items-center justify-between">
+            <div className="px-8 py-7 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-500 rounded-[18px] flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
+                <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[18px] flex items-center justify-center shadow-lg group-hover:rotate-12 transition-transform">
                   <IconChat />
                 </div>
                 <div>
-                  <h3 className="text-white text-lg font-black tracking-tight italic">TalentMatch<span className="text-fuchsia-500">.</span></h3>
+                  <h3 className="text-slate-900 text-lg font-black tracking-tight italic">TalentMatch<span className="text-cyan-500">.</span></h3>
                   <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                    <p className="text-[9px] text-purple-400 font-black uppercase tracking-[0.2em] opacity-80">
+                    <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+                    <p className="text-[9px] text-cyan-600 font-black uppercase tracking-[0.2em] opacity-80">
                       {status === 'interviewing' ? 'Live Synapse' : 'AI Agent Online'}
                     </p>
                   </div>
                 </div>
               </div>
               {!inline && (
-                <button onClick={() => setIsOpen(false)} className="w-10 h-10 rounded-full hover:bg-white/5 flex items-center justify-center text-slate-500 hover:text-white transition-all">
+                <button onClick={() => setIsOpen(false)} className="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-900 transition-all">
                   <IconClose />
                 </button>
               )}
@@ -232,14 +232,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="px-8 py-6 bg-navy-800/20 border-b border-white/5"
+                  className="px-8 py-6 bg-slate-50/30 border-b border-slate-100"
                 >
                   <form onSubmit={handleNameSubmit} className="space-y-4">
                     <input 
                       type="text" 
                       placeholder="Enter Full Name" 
                       required 
-                      className="w-full bg-navy-900/60 border border-white/10 rounded-2xl px-5 py-3.5 text-sm font-medium text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:bg-navy-900 outline-none transition-all"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:border-cyan-500/50 focus:bg-white outline-none transition-all"
                       value={nameEmail.name}
                       onChange={e => setNameEmail(p => ({ ...p, name: e.target.value }))}
                     />
@@ -247,7 +247,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
                       type="email" 
                       placeholder="Enter Corporate Email" 
                       required 
-                      className="w-full bg-navy-900/60 border border-white/10 rounded-2xl px-5 py-3.5 text-sm font-medium text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:bg-navy-900 outline-none transition-all"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-3.5 text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:border-cyan-500/50 focus:bg-white outline-none transition-all"
                       value={nameEmail.email}
                       onChange={e => setNameEmail(p => ({ ...p, email: e.target.value }))}
                     />
@@ -268,17 +268,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
                   key={i} 
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] px-5 py-4 rounded-[26px] text-[15px] leading-relaxed font-medium shadow-xl ${
+                  <div className={`max-w-[85%] px-5 py-4 rounded-[26px] text-[15px] leading-relaxed font-semibold shadow-sm ${
                     m.role === 'user' 
-                      ? 'bg-gradient-to-r from-purple-600 to-fuchsia-600 text-white rounded-br-sm shadow-purple-500/20' 
-                      : 'bg-navy-800 border border-white/5 text-slate-100 rounded-bl-sm shadow-black/20'
+                      ? 'bg-gradient-to-r from-cyan-600 to-sky-600 text-white rounded-br-sm shadow-cyan-500/10' 
+                      : 'bg-slate-100 border border-slate-200 text-slate-800 rounded-bl-sm shadow-slate-200/50'
                   }`}>
                     {m.text}
                   </div>
                 </motion.div>
               ))}
               {isTyping && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-navy-800/50 w-fit px-5 py-3 rounded-[20px] rounded-bl-sm border border-white/5">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-slate-100/50 w-fit px-5 py-3 rounded-[20px] rounded-bl-sm border border-slate-200">
                   <TypingIndicator />
                 </motion.div>
               )}
@@ -286,11 +286,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
             </div>
 
             {/* Input Console */}
-            <div className="px-8 py-6 bg-navy-900/80 border-t border-white/5 flex items-center gap-4">
+            <div className="px-8 py-6 bg-white border-t border-slate-100 flex items-center gap-4">
               <button 
                 onClick={() => fileInputRef.current?.click()}
                 disabled={status !== 'idle' || showNameForm}
-                className="w-12 h-12 bg-navy-800 rounded-2xl flex items-center justify-center text-slate-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all disabled:opacity-20"
+                className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 transition-all disabled:opacity-20"
               >
                 <IconPaperclip />
               </button>
@@ -305,13 +305,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
                   value={inputText}
                   onChange={e => setInputText(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full bg-navy-800/50 border border-white/10 rounded-[24px] px-6 py-4 text-[15px] font-medium text-white outline-none focus:border-purple-500/50 focus:bg-navy-800 transition-all disabled:opacity-20 pr-16"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-[24px] px-6 py-4 text-[15px] font-medium text-slate-800 outline-none focus:border-cyan-500/50 focus:bg-white transition-all disabled:opacity-20 pr-16"
                 />
                 
                 <button 
                   onClick={handleSend}
                   disabled={!inputText.trim()}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 bg-gradient-to-r from-purple-500 to-fuchsia-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-0"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 bg-gradient-to-r from-cyan-500 to-sky-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-cyan-500/30 hover:scale-105 active:scale-95 transition-all disabled:opacity-0"
                 >
                   <IconSend />
                 </button>
@@ -326,7 +326,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ inline = false }) => {
           onClick={() => setIsOpen(!isOpen)}
           whileHover={{ scale: 1.1, rotate: 5 }}
           whileTap={{ scale: 0.9 }}
-          className="w-20 h-20 bg-gradient-to-br from-purple-500 to-fuchsia-500 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(139,92,246,0.6)] flex items-center justify-center text-white ring-4 ring-purple-500/20"
+          className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[28px] shadow-[0_20px_60px_-10px_rgba(6,182,212,0.4)] flex items-center justify-center text-white ring-4 ring-cyan-500/20"
         >
           {isOpen ? <IconClose /> : <IconChat />}
         </motion.button>
