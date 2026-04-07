@@ -1,27 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ?? '';
 
-interface Job { id?: number; title: string; description: string; required_skills: string; updated_at?: string; }
+interface AdminJobSetupProps {
+  user: any;
+  isLoading: boolean;
+  logout: () => void;
+}
 
-const Icons = {
-  save: () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>),
-  info: () => (<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>),
-};
-
-const AdminJobSetup: React.FC = () => {
-  const { user, isLoading, logout } = useAuth();
+const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }) => {
   const navigate = useNavigate();
-  const [job, setJob] = useState<Job>({ title: '', description: '', required_skills: '' });
+  const [job, setJob] = useState<any>({ title: '', description: '', required_skills: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
-  // V6 Stability: Internal Auth Guard
+  // V7 Stability: Internal Auth Guard (Prop Driven)
   useEffect(() => {
     if (!isLoading && !user) navigate('/login', { replace: true });
   }, [user, isLoading, navigate]);
@@ -45,7 +42,7 @@ const AdminJobSetup: React.FC = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const skills = job.required_skills.split(',').map(s => s.trim()).filter(Boolean);
+      const skills = job.required_skills.split(',').map((s: string) => s.trim()).filter(Boolean);
       const res = await fetch(`${API_BASE}/api/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -60,7 +57,7 @@ const AdminJobSetup: React.FC = () => {
     }
   };
 
-  const skillList = (job.required_skills || '').split(',').map(s => s.trim()).filter(Boolean);
+  const skillList = (job.required_skills || '').split(',').map((s: string) => s.trim()).filter(Boolean);
 
   if (isLoading || !user) {
     return (
@@ -78,14 +75,10 @@ const AdminJobSetup: React.FC = () => {
         {/* Toast */}
         <AnimatePresence>
           {toast && (
-            <motion.div 
-               initial={{ opacity: 0, y: -20 }} 
-               animate={{ opacity: 1, y: 0 }} 
-               exit={{ opacity: 0, y: -20 }}
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                className={`fixed top-8 left-1/2 -translate-x-1/2 z-[100] px-6 py-3 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl border ${
-                 toast.type === 'success' ? 'bg-emerald-500 border-emerald-400 text-white' : 'bg-red-500 border-red-400 text-white'
-               }`}
-            >
+                 toast.type === 'success' ? 'bg-emerald-500 border-emerald-400 text-white' : 'bg-red-50 border-red-400 text-white'
+               }`}>
               {toast.msg}
             </motion.div>
           )}
@@ -93,7 +86,7 @@ const AdminJobSetup: React.FC = () => {
 
         <header className="mb-12">
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2 italic">Job <span className="text-cyan-500">Params.</span></h1>
-          <p className="text-slate-500 font-bold tracking-wide uppercase text-[10px] opacity-70">Active Recruitment Environment Management</p>
+          <p className="text-slate-500 font-bold tracking-wide uppercase text-[10px] opacity-70">Neural Recruitment Environment Parameters</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -105,27 +98,18 @@ const AdminJobSetup: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-8">
                   <div>
                     <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-3 ml-1">Official Job Title</label>
-                    <input 
-                      type="text" 
-                      value={job.title} 
-                      onChange={e => setJob(j => ({ ...j, title: e.target.value }))}
+                    <input type="text" value={job.title} onChange={e => setJob((j: any) => ({ ...j, title: e.target.value }))}
                       placeholder="e.g. Senior Software Engineer"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all"
-                      required 
-                    />
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all" required />
                   </div>
 
                   <div>
                     <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-3 ml-1">Target Skills (Comma Separated)</label>
-                    <input 
-                      type="text" 
-                      value={job.required_skills} 
-                      onChange={e => setJob(j => ({ ...j, required_skills: e.target.value }))}
+                    <input type="text" value={job.required_skills} onChange={e => setJob((j: any) => ({ ...j, required_skills: e.target.value }))}
                       placeholder="Python, React, AWS, Docker..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all"
-                    />
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all" />
                     <div className="flex flex-wrap gap-2 mt-4">
-                       {skillList.map(s => (
+                       {skillList.map((s: string) => (
                          <span key={s} className="px-3 py-1 bg-cyan-50 text-cyan-600 border border-cyan-100 rounded-lg text-[10px] font-black uppercase tracking-wider">{s}</span>
                        ))}
                     </div>
@@ -133,36 +117,21 @@ const AdminJobSetup: React.FC = () => {
 
                   <div>
                     <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-3 ml-1">Contextual Description</label>
-                    <textarea 
-                      rows={6} 
-                      value={job.description} 
-                      onChange={e => setJob(j => ({ ...j, description: e.target.value }))}
+                    <textarea rows={6} value={job.description} onChange={e => setJob((j: any) => ({ ...j, description: e.target.value }))}
                       placeholder="Paste the full job description here..."
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all resize-none"
-                    />
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all resize-none" />
                   </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={saving} 
-                    className="w-full btn-primary py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl disabled:opacity-50 flex items-center justify-center gap-3"
-                  >
-                    {saving ? 'Syncing...' : <><Icons.save /> Commit Changes</>}
+                  <button type="submit" disabled={saving} className="w-full btn-primary py-5 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl disabled:opacity-50 flex items-center justify-center gap-3">
+                    {saving ? 'Syncing...' : (
+                      <>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+                        Commit Changes
+                      </>
+                    )}
                   </button>
                 </form>
               )}
-            </div>
-          </div>
-
-          <div className="lg:col-span-4 space-y-6">
-            <div className="glass-card p-8 border-slate-100 bg-cyan-50 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                 <div className="text-cyan-600"><Icons.info /></div>
-                 <h4 className="text-cyan-800 font-black uppercase tracking-widest text-xs">Optimization Hint</h4>
-              </div>
-              <p className="text-sm leading-relaxed text-cyan-700 font-medium italic">
-                "Our AI core uses Semantic Matching. You don't need every keyword—just provide the core responsibilities and the engine will handle the rest."
-              </p>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 // Components
 import Header from './components/Header';
@@ -16,40 +16,50 @@ import AboutPage      from './pages/AboutPage';
 import ChatbotPage    from './pages/ChatbotPage';
 
 // ---------------------------------------------------------------------------
-// App Routes Shell (V6 Stability)
+// App Content Shell (V7 Nuclear Stability)
 // ---------------------------------------------------------------------------
-const AppRoutes: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { user, isLoading, logout } = useAuth();
+  const location = useLocation();
+
+  // Scroll to top on every navigation
+  useEffect(() => { window.scrollTo(0, 0); }, [location.pathname]);
+
+  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
+  const isLogin = location.pathname === '/login';
+  const hideShell = isDashboard || isLogin;
+
   return (
-    <>
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
       {/* 
-        Definitive Stability Fix (V6):
-        1. Always render Header/Footer/ChatWidget. They handle internal visibility via CSS.
-        2. Routes are flat. We remove the 'ProtectedRoute' wrapper component which was
-           causing hook-sequence mismatches (Error #300).
-        3. Auth checks are moved directly into the page components.
+        V7 Stability Rule:
+        Components are NEVER unmounted based on navigation. 
+        We pass 'hidden' as a prop so they maintain their hook state internally. 
       */}
-      <Header />
+      <Header user={user} logout={logout} hidden={hideShell} />
       
       <main className="flex-grow">
         <Routes>
-          {/* Public */}
           <Route path="/"         element={<LandingPage />} />
           <Route path="/about"    element={<AboutPage />}   />
           <Route path="/chatbot"  element={<ChatbotPage />} />
           <Route path="/login"    element={<LoginPage />}   />
 
-          {/* Logged in views: Auth logic is now inside Dashboard and AdminJobSetup */}
-          <Route path="/dashboard"         element={<Dashboard />} />
-          <Route path="/admin/job-setup"   element={<AdminJobSetup />} />
+          {/* Secure Routes */}
+          <Route path="/dashboard" element={
+             <Dashboard user={user} isLoading={isLoading} logout={logout} />
+          } />
+          <Route path="/admin/job-setup" element={
+             <AdminJobSetup user={user} isLoading={isLoading} logout={logout} />
+          } />
 
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      <Footer />
-      <ChatWidget />
-    </>
+      <Footer hidden={hideShell} />
+      <ChatWidget user={user} hidden={isDashboard} />
+    </div>
   );
 };
 
@@ -57,9 +67,7 @@ const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
-        <div className="flex flex-col min-h-screen bg-slate-50 text-slate-800">
-           <AppRoutes />
-        </div>
+        <AppContent />
       </Router>
     </AuthProvider>
   );

@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
-const Header: React.FC = () => {
-  const { user, logout } = useAuth();
+interface HeaderProps {
+  user: any;
+  logout: () => void;
+  hidden: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
-
-  // Hook Stability Fix: 
-  // We NEVER return null. Instead we use CSS to hide the visuals.
-  // This ensures the component (and its hooks) are never unmounted from the React tree,
-  // which is the definitive fix for Minified React Error #300.
-  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
-  const isLogin = location.pathname === '/login';
-  const isHidden = isDashboard || isLogin;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -29,19 +25,20 @@ const Header: React.FC = () => {
     { name: 'Dashboard', path: '/dashboard' },
   ];
 
+  // Nuclear Stability: Components NEVER unmount. We use CSS and motion to hide.
   return (
     <motion.header 
       initial={false}
       animate={{ 
-        y: isHidden ? -120 : 0,
-        opacity: isHidden ? 0 : 1
+        y: hidden ? -130 : 0,
+        opacity: hidden ? 0 : 1,
+        pointerEvents: hidden ? 'none' : 'auto'
       }}
-      transition={{ duration: 0.4, ease: "easeInOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 pointer-events-none ${isHidden ? 'invisible' : ''}`}
+      className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 transition-all duration-500`}
     >
-      <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-slate-100 shadow-[0_20px_50px_-20px_rgba(6,182,212,0.15)] pointer-events-auto transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-2xl' : 'bg-white/40'}`}>
+      <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-slate-100 shadow-[0_20px_50px_-20px_rgba(6,182,212,0.15)] transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-2xl' : 'bg-white/40'}`}>
         {/* Logo */}
-        <Link to="/" className="flex items-center group">
+        <Link to="/" className="flex items-center group pointer-events-auto">
           <div className="w-11 h-11 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[14px] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -53,7 +50,7 @@ const Header: React.FC = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-10">
+        <nav className="hidden md:flex items-center gap-10 pointer-events-auto">
           {navLinks.map((link) => (
             <Link
               key={link.path}
@@ -89,7 +86,7 @@ const Header: React.FC = () => {
         </nav>
 
         {/* Mobile menu button */}
-        <Link to="/chatbot" className="md:hidden btn-primary scale-75">
+        <Link to="/chatbot" className="md:hidden btn-primary scale-75 pointer-events-auto">
           Demo
         </Link>
       </div>
