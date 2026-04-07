@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail]       = useState('');
@@ -10,94 +11,104 @@ const LoginPage: React.FC = () => {
   const { login }               = useAuth();
   const navigate                = useNavigate();
 
-  const doLogin = async (em: string, pw: string) => {
+  const doLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
     setError(''); setLoading(true);
-    try { await login(em, pw); navigate('/dashboard', { replace: true }); }
-    catch { setError('Invalid credentials or server unreachable. Ensure Flask is running on port 5000.'); }
-    finally { setLoading(false); }
+    try { 
+      await login(email, password); 
+      navigate('/dashboard', { replace: true }); 
+    } catch { 
+      setError('Invalid credentials. Please try again.'); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen bg-navy-900 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Background patterns */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-purple-600/5 blur-[120px] rounded-full pointer-events-none" />
 
-      {/* Background glow */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[700px] h-[500px] rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-
-      {/* Back link */}
-      <Link to="/" className="absolute top-6 left-8 inline-flex items-center gap-1.5 text-xs transition-colors"
-        style={{ color: 'var(--text-dim)' }}
-        onMouseEnter={e => (e.currentTarget as HTMLElement).style.color = '#fff'}
-        onMouseLeave={e => (e.currentTarget as HTMLElement).style.color = 'var(--text-dim)'}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/>
+      {/* Back to Home */}
+      <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold text-sm">
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
         </svg>
         Back to Home
       </Link>
 
-      <div className="w-full max-w-[360px] relative z-10">
-
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-[400px] relative z-10"
+      >
         {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-10">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg" style={{ background: 'linear-gradient(135deg,#7c3aed,#5b21b6)', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 bg-purple-gradient rounded-3xl mx-auto flex items-center justify-center mb-4 shadow-2xl shadow-purple-500/20">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <div>
-            <p className="text-base font-bold text-white leading-none">TalentMatch AI</p>
-            <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-dim)' }}>Recruiter Portal</p>
-          </div>
+          <h2 className="text-2xl font-black text-white tracking-tight">TalentMatch <span className="text-purple-400">Portal</span></h2>
+          <p className="text-slate-500 font-medium text-sm mt-1">Admin & Recruiter Access</p>
         </div>
 
-        {/* Card */}
-        <div className="card p-7">
-          <h1 className="text-lg font-bold text-white mb-1">Sign in</h1>
-          <p className="text-xs mb-6" style={{ color: 'var(--text-dim)' }}>Access your recruitment dashboard</p>
+        {/* Login Card */}
+        <div className="glass-card p-10 border-white/5 shadow-2xl">
+          <h1 className="text-xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-sm text-slate-400 mb-8 font-medium">Please enter your details to sign in.</p>
 
           {error && (
-            <div className="mb-4 px-3.5 py-2.5 rounded-xl text-xs text-red-400"
-              style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+            <motion.div 
+              initial={{ opacity: 0, x: -10 }} 
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-xs font-bold text-red-400"
+            >
               {error}
-            </div>
+            </motion.div>
           )}
 
-          <form onSubmit={(e) => { e.preventDefault(); doLogin(email, password); }} className="space-y-4">
+          <form onSubmit={doLogin} className="space-y-5">
             <div>
-              <label className="block text-[11px] font-medium uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-dim)' }}>Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="admin@company.com"
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors"
-                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.5)'}
-                onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-                required />
+              <label className="block text-[10px] uppercase font-black tracking-widest text-slate-500 mb-2 ml-1">Email Address</label>
+              <input 
+                type="email" 
+                placeholder="admin@talentmatch.ai"
+                required
+                className="w-full bg-navy-800 border border-white/10 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-purple-500 outline-none transition-all placeholder-slate-600"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
             </div>
+
             <div>
-              <label className="block text-[11px] font-medium uppercase tracking-wider mb-1.5" style={{ color: 'var(--text-dim)' }}>Password</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              <label className="block text-[10px] uppercase font-black tracking-widest text-slate-500 mb-2 ml-1">Password</label>
+              <input 
+                type="password" 
                 placeholder="••••••••"
-                className="w-full px-3.5 py-2.5 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none transition-colors"
-                style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
-                onFocus={e => (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.5)'}
-                onBlur={e => (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'}
-                required />
+                required
+                className="w-full bg-navy-800 border border-white/10 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-purple-500 outline-none transition-all placeholder-slate-600"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+              />
             </div>
-            <button type="submit" disabled={loading} className="btn-violet w-full mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
-              {loading ? (
-                <><span className="w-3.5 h-3.5 border border-white/30 border-t-white rounded-full animate-spin" />Signing in…</>
-              ) : 'Sign In'}
+
+            <button 
+              type="submit" 
+              disabled={loading}
+              className="w-full btn-primary py-4 rounded-xl font-black text-sm uppercase tracking-widest mt-4 disabled:opacity-50"
+            >
+              {loading ? 'Authenticating...' : 'Sign In Now'}
             </button>
           </form>
-
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: 'var(--muted)' }}>
-          Applicant?{' '}
-          <Link to="/" className="text-violet-400 hover:text-violet-300 transition-colors">Apply on the main page</Link>
+        <p className="text-center mt-8 text-sm font-medium text-slate-500">
+          Interested in joining? {' '}
+          <Link to="/chatbot" className="text-purple-400 hover:text-purple-300 transition-colors font-bold whitespace-nowrap">Try the Demo instead</Link>
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 };
