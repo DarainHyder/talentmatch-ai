@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Sidebar from '../components/Sidebar';
 
@@ -13,19 +14,26 @@ const Icons = {
 };
 
 const AdminJobSetup: React.FC = () => {
-  const { logout } = useAuth();
+  const { user, isLoading, logout } = useAuth();
+  const navigate = useNavigate();
   const [job, setJob] = useState<Job>({ title: '', description: '', required_skills: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
 
+  // V6 Stability: Internal Auth Guard
   useEffect(() => {
+    if (!isLoading && !user) navigate('/login', { replace: true });
+  }, [user, isLoading, navigate]);
+
+  useEffect(() => {
+    if (!user) return;
     fetch(`${API_BASE}/api/jobs`)
       .then(r => r.json())
       .then(d => { if (d.job) setJob(d.job); })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   const showToast = (type: 'success' | 'error', msg: string) => {
     setToast({ type, msg });
@@ -54,6 +62,14 @@ const AdminJobSetup: React.FC = () => {
 
   const skillList = (job.required_skills || '').split(',').map(s => s.trim()).filter(Boolean);
 
+  if (isLoading || !user) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin shadow-lg" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex bg-slate-50 min-h-screen text-slate-800">
       <Sidebar onLogout={logout} />
@@ -77,7 +93,7 @@ const AdminJobSetup: React.FC = () => {
 
         <header className="mb-12">
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter mb-2 italic">Job <span className="text-cyan-500">Params.</span></h1>
-          <p className="text-slate-500 font-bold tracking-wide uppercase text-[10px] opacity-70">Active Recruitment Environment</p>
+          <p className="text-slate-500 font-bold tracking-wide uppercase text-[10px] opacity-70">Active Recruitment Environment Management</p>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
@@ -145,14 +161,7 @@ const AdminJobSetup: React.FC = () => {
                  <h4 className="text-cyan-800 font-black uppercase tracking-widest text-xs">Optimization Hint</h4>
               </div>
               <p className="text-sm leading-relaxed text-cyan-700 font-medium italic">
-                "Our AI uses Semantic Matching. You don't need every keyword—just provide the core responsibilities and the engine will handle the rest."
-              </p>
-            </div>
-            
-            <div className="glass-card bg-white p-8 border-slate-100 shadow-sm">
-              <h4 className="text-slate-400 font-black uppercase tracking-widest text-[9px] mb-4">Last Synced</h4>
-              <p className="text-sm text-slate-900 font-black italic">
-                {job.updated_at ? new Date(job.updated_at).toLocaleString() : 'Never'}
+                "Our AI core uses Semantic Matching. You don't need every keyword—just provide the core responsibilities and the engine will handle the rest."
               </p>
             </div>
           </div>

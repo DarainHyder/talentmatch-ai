@@ -1,6 +1,6 @@
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Components
 import Header from './components/Header';
@@ -16,55 +16,33 @@ import AboutPage      from './pages/AboutPage';
 import ChatbotPage    from './pages/ChatbotPage';
 
 // ---------------------------------------------------------------------------
-// Scroll Restoration
-// ---------------------------------------------------------------------------
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-  return null;
-};
-
-// ---------------------------------------------------------------------------
-// Protected Route
-// ---------------------------------------------------------------------------
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading } = useAuth();
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin shadow-lg" />
-      </div>
-    );
-  }
-  if (!user) return <Navigate to="/login" replace />;
-  return <>{children}</>;
-};
-
-// ---------------------------------------------------------------------------
-// App Routes Shell
+// App Routes Shell (V6 Stability)
 // ---------------------------------------------------------------------------
 const AppRoutes: React.FC = () => {
   return (
     <>
-      <ScrollToTop />
-      {/* Header and Footer now handle their own visibility internally. 
-          This keeps the React component tree stable and prevents Hook Error #300. */}
+      {/* 
+        Definitive Stability Fix (V6):
+        1. Always render Header/Footer/ChatWidget. They handle internal visibility via CSS.
+        2. Routes are flat. We remove the 'ProtectedRoute' wrapper component which was
+           causing hook-sequence mismatches (Error #300).
+        3. Auth checks are moved directly into the page components.
+      */}
       <Header />
       
       <main className="flex-grow">
         <Routes>
+          {/* Public */}
           <Route path="/"         element={<LandingPage />} />
           <Route path="/about"    element={<AboutPage />}   />
           <Route path="/chatbot"  element={<ChatbotPage />} />
           <Route path="/login"    element={<LoginPage />}   />
 
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
-          <Route path="/admin/job-setup" element={
-            <ProtectedRoute><AdminJobSetup /></ProtectedRoute>
-          } />
+          {/* Logged in views: Auth logic is now inside Dashboard and AdminJobSetup */}
+          <Route path="/dashboard"         element={<Dashboard />} />
+          <Route path="/admin/job-setup"   element={<AdminJobSetup />} />
 
+          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

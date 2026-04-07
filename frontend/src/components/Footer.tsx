@@ -6,12 +6,14 @@ const Footer: React.FC = () => {
   const location = useLocation();
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
   const isLogin = location.pathname === '/login';
+  const isHidden = isDashboard || isLogin;
 
-  // Stability Fix: Prevent unmounting during SPA route transitions
-  if (isDashboard || isLogin) return null;
+  // Hook Stability Fix: 
+  // We NEVER return null. We hide the content visually but keep the component in the React tree.
+  // This is the definitive fix for Minified React Error #300.
 
   return (
-    <footer className="relative bg-white pt-32 pb-16 overflow-hidden border-t border-slate-100">
+    <footer className={`relative bg-white pt-32 pb-16 overflow-hidden border-t border-slate-100 ${isHidden ? 'hidden' : 'block'}`}>
       <div className="bg-glow w-[500px] h-[500px] -bottom-40 left-1/2 -translate-x-1/2 opacity-5" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
       
       <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
@@ -52,7 +54,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-slate-400 text-sm font-bold tracking-wide">&copy; 2026 TalentMatch AI. Light Stability V5.</p>
+          <p className="text-slate-400 text-sm font-bold tracking-wide">&copy; 2026 TalentMatch AI. Stability V6.</p>
         </div>
       </div>
     </footer>

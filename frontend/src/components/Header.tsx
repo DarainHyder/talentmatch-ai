@@ -8,19 +8,19 @@ const Header: React.FC = () => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
 
-  // Stability Fix: Move the visibility check INSIDE the component.
-  // This keeps the component (and its hooks) in a fixed position in the tree,
-  // preventing React Hook sequence errors (Error #300) during navigation.
+  // Hook Stability Fix: 
+  // We NEVER return null. Instead we use CSS to hide the visuals.
+  // This ensures the component (and its hooks) are never unmounted from the React tree,
+  // which is the definitive fix for Minified React Error #300.
   const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
   const isLogin = location.pathname === '/login';
+  const isHidden = isDashboard || isLogin;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  if (isDashboard || isLogin) return null;
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -31,9 +31,13 @@ const Header: React.FC = () => {
 
   return (
     <motion.header 
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      className="fixed top-0 left-0 right-0 z-50 px-6 py-6 pointer-events-none"
+      initial={false}
+      animate={{ 
+        y: isHidden ? -120 : 0,
+        opacity: isHidden ? 0 : 1
+      }}
+      transition={{ duration: 0.4, ease: "easeInOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 pointer-events-none ${isHidden ? 'invisible' : ''}`}
     >
       <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-slate-100 shadow-[0_20px_50px_-20px_rgba(6,182,212,0.15)] pointer-events-auto transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-2xl' : 'bg-white/40'}`}>
         {/* Logo */}
