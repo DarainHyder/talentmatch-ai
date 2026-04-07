@@ -49,60 +49,86 @@ const LandingPage: React.FC = () => {
             </div>
           </motion.div>
 
-          {/* Hero Illustration */}
-          <motion.div
-             initial={{ scale: 0.8, opacity: 0, rotate: -5 }}
-             animate={{ scale: 1, opacity: 1, rotate: 0 }}
-             transition={{ duration: 1, ease: "easeOut" }}
-             className="relative hidden lg:block"
-          >
-             <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" />
-             <div className="relative glass-card p-6 rounded-[48px] border-white/5 overflow-hidden group">
-                {/* Background Grid Pattern */}
-                <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
-                
-                <svg viewBox="0 0 200 200" className="w-[450px] h-[450px] transition-transform duration-700 group-hover:scale-105">
-                   <defs>
-                     <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.2" />
-                     </linearGradient>
-                   </defs>
-                   
-                   {/* Main Brain/AI Core Circle */}
-                   <circle cx="100" cy="100" r="70" stroke="url(#heroGrad)" strokeWidth="0.5" fill="none" className="animate-[pulse_4s_ease-in-out_infinite]" />
-                   <circle cx="100" cy="100" r="50" stroke="url(#heroGrad)" strokeWidth="1" fill="none" strokeDasharray="10 5" />
-                   
-                   {/* Intersecting Nodes */}
-                   <g className="text-purple-400">
-                      <path d="M60,100 L140,100 M100,60 L100,140 M72,72 L128,128 M128,72 L72,128" stroke="currentColor" strokeWidth="0.2" opacity="0.3" />
-                      
-                      <circle cx="100" cy="100" r="8" fill="currentColor" fillOpacity="0.8" />
-                      <circle cx="100" cy="100" r="15" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.5" />
-                      
-                      {/* Satellite Nodes */}
-                      <circle cx="60" cy="100" r="4" fill="currentColor" />
-                      <circle cx="140" cy="100" r="4" fill="currentColor" />
-                      <circle cx="100" cy="60" r="4" fill="currentColor" />
-                      <circle cx="100" cy="140" r="4" fill="currentColor" />
-                      
-                      {/* Floating Data Bits */}
-                      <rect x="150" y="80" width="10" height="2" rx="1" fill="currentColor" opacity="0.4" />
-                      <rect x="40" y="120" width="8" height="2" rx="1" fill="currentColor" opacity="0.4" />
-                      <rect x="95" y="40" width="12" height="2" rx="1" fill="currentColor" opacity="0.4" />
-                   </g>
+             <div className="relative h-[600px] w-full flex items-center justify-center lg:block">
+                {/* Orbital Background */}
+                <motion.div 
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 opacity-20"
+                >
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-purple-500/30 rounded-full" />
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] border border-purple-500/20 rounded-full" />
+                   <div className="absolute top-[10%] left-1/2 w-4 h-4 bg-purple-500 rounded-full blur-sm" />
+                </motion.div>
 
-                   {/* Scanning Beam */}
-                   <rect x="30" y="70" width="140" height="1" fill="url(#heroGrad)" className="animate-[bounce_6s_linear_infinite]" opacity="0.6" />
-                </svg>
+                {/* Main AI Core Card */}
+                <motion.div 
+                   initial={{ y: 20, opacity: 0 }}
+                   animate={{ y: 0, opacity: 1 }}
+                   className="relative z-10 glass-card p-1 items-center justify-center max-w-[500px] mx-auto lg:ml-auto"
+                >
+                   <div className="bg-navy-900/40 rounded-[48px] p-8 overflow-hidden relative group">
+                      {/* Scanning Line */}
+                      <motion.div 
+                         animate={{ top: ['0%', '100%', '0%'] }}
+                         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                         className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent z-20 opacity-50"
+                      />
 
-                {/* Status Floaties */}
-                <div className="absolute top-10 right-10 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-900/50 border border-white/10 backdrop-blur-md">
-                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
-                   <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Core Active</span>
-                </div>
+                      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 drop-shadow-[0_0_30px_rgba(124,58,237,0.2)]">
+                         <defs>
+                           <radialGradient id="ringGrad">
+                              <stop offset="0%" stopColor="#7c3aed" />
+                              <stop offset="100%" stopColor="transparent" />
+                           </radialGradient>
+                         </defs>
+
+                         {/* Core Nodes */}
+                         <motion.g animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ originX: '100px', originY: '100px' }}>
+                            <circle cx="100" cy="100" r="40" stroke="#7c3aed" strokeWidth="0.5" fill="none" strokeDasharray="5 5" opacity="0.3" />
+                            <circle cx="100" cy="60" r="4" fill="#8b5cf6" />
+                            <circle cx="100" cy="140" r="4" fill="#8b5cf6" />
+                            <circle cx="60" cy="100" r="4" fill="#8b5cf6" />
+                            <circle cx="140" cy="100" r="4" fill="#8b5cf6" />
+                         </motion.g>
+
+                         {/* Inner Core Pulse */}
+                         <motion.circle 
+                           cx="100" cy="100" r="15" 
+                           fill="#7c3aed"
+                           animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
+                           transition={{ duration: 2, repeat: Infinity }}
+                         />
+                         <circle cx="100" cy="100" r="25" stroke="#7c3aed" strokeWidth="1" fill="none" opacity="0.5" />
+                         
+                         {/* Dynamic Data Lines */}
+                         <motion.path 
+                           d="M100 100 L160 40 M100 100 L40 160 M100 100 L160 160 M100 100 L40 40" 
+                           stroke="#7c3aed" strokeWidth="0.5" 
+                           strokeDasharray="100"
+                           animate={{ strokeDashoffset: [200, 0] }}
+                           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                           opacity="0.2"
+                         />
+                      </svg>
+
+                      {/* Status HUD */}
+                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
+                         {['Scanned', 'Analyzed', 'Matched'].map((tag, i) => (
+                           <motion.div 
+                             key={tag}
+                             initial={{ opacity: 0 }}
+                             animate={{ opacity: 1 }}
+                             transition={{ delay: 1 + i*0.2 }}
+                             className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[8px] font-black uppercase tracking-tighter text-purple-400"
+                           >
+                             {tag}
+                           </motion.div>
+                         ))}
+                      </div>
+                   </div>
+                </motion.div>
              </div>
-          </motion.div>
         </div>
       </section>
 

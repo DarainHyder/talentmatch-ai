@@ -181,19 +181,41 @@ const ChatbotPage: React.FC = () => {
             </div>
           </motion.div>
 
-          <motion.div
-             initial={{ scale: 0.8, opacity: 0 }}
-             whileInView={{ scale: 1, opacity: 1 }}
-             viewport={{ once: true }}
-             className="relative"
-          >
-             <div className="glass-card p-12 rounded-[40px] flex items-center justify-center border-white/10 group">
-               <svg viewBox="0 0 24 24" className="w-48 h-48 text-purple-400 group-hover:rotate-12 transition-transform duration-500" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                  <path d="M12 6a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm0 10a1 1 0 1 0 1 1 1 1 0 0 0-1-1zm0-7a3 3 0 1 0-3 3 1 1 0 0 1 1 1v2" />
-               </svg>
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             transition={{ duration: 1 }}
+             className="relative lg:w-1/2 flex items-center justify-center"
+           >
+             <div className="absolute inset-0 bg-purple-600/10 rounded-full blur-[120px] animate-pulse" />
+             <div className="relative glass-card p-16 rounded-[48px] border-white/5 flex items-center justify-center overflow-hidden min-h-[350px] w-full">
+                {/* Dynamic Waveform / Voice Interface */}
+                <div className="flex items-center gap-1.5 h-24">
+                   {[...Array(24)].map((_, i) => (
+                     <motion.div 
+                       key={i}
+                       className="w-1.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-full"
+                       animate={{ 
+                         height: [20, Math.random() * 80 + 20, 20],
+                         opacity: [0.3, 1, 0.3]
+                       }}
+                       transition={{ 
+                         duration: 0.8 + Math.random() * 0.5, 
+                         repeat: Infinity, 
+                         delay: i * 0.05,
+                         ease: "easeInOut"
+                       }}
+                     />
+                   ))}
+                </div>
+
+                {/* Floating Status HUD */}
+                <div className="absolute top-10 right-10 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-900/50 border border-white/10 backdrop-blur-md">
+                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Processing Intent</span>
+                </div>
              </div>
-          </motion.div>
+           </motion.div>
         </div>
       </section>
 

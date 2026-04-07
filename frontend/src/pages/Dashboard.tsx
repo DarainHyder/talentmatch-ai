@@ -264,25 +264,25 @@ const Dashboard: React.FC = () => {
                        initial={{ opacity: 0 }} 
                        animate={{ opacity: 1 }}
                        transition={{ delay: i * 0.05 }}
-                       className="group hover:bg-white/5 transition-colors"
+                       className="group hover:bg-white/5 transition-colors border-b border-white/5 last:border-0"
                     >
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-purple-gradient rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-purple-500/10">
-                            {c.name[0].toUpperCase()}
+                          <div className="w-10 h-10 bg-purple-gradient rounded-xl flex items-center justify-center font-black text-white shadow-lg shadow-purple-500/10 shrink-0">
+                            {(c.name?.[0] || 'A').toUpperCase()}
                           </div>
-                          <div>
-                            <p className="text-sm font-black text-white tracking-tight">{c.name}</p>
-                            <p className="text-xs text-slate-500">{c.email}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-white tracking-tight truncate">{c.name || 'Anonymous Applicant'}</p>
+                            <p className="text-xs text-slate-500 truncate">{c.email || 'No email provided'}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6 w-48"><ProgressBar value={c.cv_score} /></td>
-                      <td className="px-8 py-6 w-48"><ProgressBar value={c.interview_score} /></td>
+                      <td className="px-8 py-6 w-48"><ProgressBar value={c.cv_score || 0} /></td>
+                      <td className="px-8 py-6 w-48"><ProgressBar value={c.interview_score || 0} /></td>
                       <td className="px-8 py-6">
-                        <ProgressRing value={c.final_score} />
+                        <ProgressRing value={c.final_score || 0} />
                       </td>
-                      <td className="px-8 py-6"><StatusBadge status={c.status} /></td>
+                      <td className="px-8 py-6"><StatusBadge status={c.status || 'Under Review'} /></td>
                       <td className="px-8 py-6 text-right">
                         <button 
                           onClick={() => openTranscript(c)}

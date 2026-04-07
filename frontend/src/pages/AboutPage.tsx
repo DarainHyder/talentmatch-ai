@@ -71,22 +71,64 @@ const AboutPage: React.FC = () => {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true }}
-          className="relative"
-        >
-          <div className="absolute inset-0 bg-purple-gradient opacity-20 blur-3xl animate-pulse" />
-          <div className="relative glass-card p-4 rounded-[40px] border-white/10 group overflow-hidden">
-            <svg viewBox="0 0 500 500" className="w-full h-full text-purple-400 transform group-hover:scale-105 transition-transform duration-700">
-               <circle cx="250" cy="250" r="180" fill="currentColor" fillOpacity="0.1" />
-               <rect x="200" y="150" width="100" height="150" rx="20" fill="currentColor" fillOpacity="0.8" />
-               <circle cx="250" cy="180" r="25" fill="white" />
-               <path d="M150 350 Q 250 450 350 350" stroke="currentColor" strokeWidth="15" fill="none" />
-            </svg>
-          </div>
-        </motion.div>
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.9 }}
+             animate={{ opacity: 1, scale: 1 }}
+             transition={{ duration: 1 }}
+             className="relative"
+           >
+             <div className="absolute inset-0 bg-purple-600/10 rounded-full blur-[120px] animate-pulse" />
+             <div className="relative glass-card p-12 rounded-[64px] border-white/5 aspect-square flex items-center justify-center overflow-hidden group">
+                {/* Abstract AI Head / Neural Nexus */}
+                <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 transition-transform duration-700 group-hover:scale-110">
+                   <defs>
+                      <linearGradient id="nexusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                         <stop offset="0%" stopColor="#7c3aed" />
+                         <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                      </linearGradient>
+                   </defs>
+
+                   {/* Background Orbitals */}
+                   <motion.circle 
+                     cx="100" cy="100" r="80" 
+                     stroke="url(#nexusGrad)" strokeWidth="0.5" fill="none" strokeDasharray="10 5" 
+                     animate={{ rotate: 360 }}
+                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                   />
+
+                   {/* The 'Head' Shape (Abstract) */}
+                   <path d="M100,40 Q140,40 150,90 Q160,140 100,160 Q40,140 50,90 Q60,40 100,40" fill="none" stroke="url(#nexusGrad)" strokeWidth="2" opacity="0.6" />
+                   
+                   {/* Neural Nodes */}
+                   {[
+                     { x: 100, y: 70 }, { x: 130, y: 100 }, { x: 70, y: 100 }, 
+                     { x: 100, y: 130 }, { x: 100, y: 100 }
+                   ].map((p, i) => (
+                     <motion.g key={i}>
+                        <motion.circle 
+                          cx={p.x} cy={p.y} r="4" fill="#7c3aed"
+                          animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.3, 1] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
+                        />
+                        {/* Connecting Lines */}
+                        <motion.line 
+                          x1="100" y1="100" x2={p.x} y2={p.y} 
+                          stroke="#7c3aed" strokeWidth="0.5" opacity="0.3"
+                          strokeDasharray="50"
+                          animate={{ strokeDashoffset: [100, 0] }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        />
+                     </motion.g>
+                   ))}
+
+                   {/* Central Data Core */}
+                   <motion.circle 
+                     cx="100" cy="100" r="10" fill="#7c3aed"
+                     animate={{ shadow: ["0 0 10px #7c3aed", "0 0 30px #7c3aed", "0 0 10px #7c3aed"] }}
+                   />
+                </svg>
+             </div>
+           </motion.div>
       </section>
 
       {/* Why We Built This */}
