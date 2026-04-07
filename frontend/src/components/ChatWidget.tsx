@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const API_BASE = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ?? '';
 
 interface ChatWidgetProps {
   user: any;
@@ -10,73 +12,203 @@ interface ChatWidgetProps {
 const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([
-    { role: 'bot', content: "Neural link established. I am your TalentMatch AI co-pilot. How can I assist with your recruitment pipeline today?" }
+    { role: 'bot', content: "Neural link established. I am your TalentMatch AI co-pilot. Please upload your CV to initialize the screening protocol." }
   ]);
   const [input, setInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isUploaded, setIsUploaded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // V7 Nuclear Stability: Strictly no conditional unmounts.
-  // We use CSS 'hidden' logic via props.
+  // Auto-scroll to bottom
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
-  const sendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    setMessages([...messages, { role: 'user', content: input }]);
-    setInput('');
-    setTimeout(() => {
-      setMessages(m => [...m, { role: 'bot', content: "Neural matching algorithm initializing... The interview analysis is 94% complete based on the current CV indices." }]);
-    }, 1000);
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/upload-cv`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      
+      if (data.session_id) {
+        setSessionId(data.session_id);
+        setIsUploaded(true);
+        setMessages(prev => [
+          ...prev, 
+          { role: 'user', content: `Attached CV: ${file.name}` },
+          { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Neural Indexing Completed. Welcome ${data.name || 'Candidate'}. Let's begin the behavioral assessment.` }
+        ]);
+      }
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'bot', content: "Neural link interrupted. Please ensure the CV is a valid PDF/Word document." }]);
+    } finally {
+      setUploading(false);
+    }
   };
 
-  if (hidden && !inline) return null; // We return null only if it's the global one in a hidden route
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !sessionId || isTyping) return;
+
+    const userMsg = input;
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
+    setIsTyping(true);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sessionId, message: userMsg }),
+      });
+      const data = await res.json();
+      
+      setMessages(prev => [...prev, { role: 'bot', content: data.response }]);
+    } catch (err) {
+      setMessages(prev => [...prev, { role: 'bot', content: "Neural lag detected. Attempting to reconnect to core..." }]);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
+  if (hidden && !inline) return null;
 
   return (
     <div className={`${inline ? 'w-full' : 'fixed bottom-8 right-8 z-[100]'}`}>
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        onChange={handleFileUpload} 
+        className="hidden" 
+        accept=".pdf,.doc,.docx" 
+      />
+      
       <AnimatePresence>
         {(isOpen || inline) && (
-          <motion.div initial={inline ? {} : { opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className={`flex flex-col border border-slate-100 shadow-[0_30px_100px_-20px_rgba(6,182,212,0.15)] bg-white/80 backdrop-blur-2xl overflow-hidden ${
-              inline ? 'w-full h-[600px] rounded-[32px]' : 'w-96 h-[500px] rounded-[30px] mb-6'
-            }`}>
+          <motion.div 
+            initial={inline ? {} : { opacity: 0, scale: 0.9, y: 20 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className={`flex flex-col border border-slate-100 shadow-[0_30px_100px_-20px_rgba(6,182,212,0.15)] bg-white/90 backdrop-blur-2xl overflow-hidden ${
+              inline ? 'w-full h-[650px] rounded-[32px]' : 'w-96 h-[550px] rounded-[30px] mb-6'
+            }`}
+          >
             {/* Header */}
-            <div className="px-6 py-5 bg-gradient-to-r from-cyan-500/5 to-transparent flex items-center justify-between border-b border-slate-50">
+            <div className="px-6 py-5 bg-gradient-to-r from-cyan-500/5 to-transparent flex items-center justify-between border-b border-slate-100">
                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-cyan-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-slate-800 uppercase tracking-widest">TM AI Pilot</h3>
-                    <p className="text-[9px] text-emerald-500 font-bold uppercase tracking-widest">Neural Sync Active</p>
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic">TM AI Pilot.</h3>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                       <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isUploaded ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                         {isUploaded ? 'Linked: Evaluation Mode' : 'Awaiting CV Upload'}
+                       </p>
+                    </div>
                   </div>
                </div>
-               {!inline && <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg></button>}
+               {!inline && (
+                 <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">
+                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
+                 </button>
+               )}
             </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
+            {/* Messages Area */}
+            <div 
+              ref={scrollRef}
+              className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide bg-gradient-to-b from-white to-slate-50/30"
+            >
                {messages.map((m, i) => (
                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-black ${
-                      m.role === 'bot' ? 'bg-slate-50 text-slate-400 border border-slate-100' : 'bg-cyan-500 text-white shadow-lg shadow-cyan-500/20'
+                    <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-black border transition-all ${
+                      m.role === 'bot' 
+                        ? 'bg-white text-slate-400 border-slate-100 shadow-sm' 
+                        : 'bg-gradient-to-br from-cyan-500 to-sky-500 text-white border-transparent shadow-lg shadow-cyan-500/20'
                     }`}>
                        {m.role === 'bot' ? 'TM' : 'ID'}
                     </div>
-                    <div className={`max-w-[80%] px-4 py-3 rounded-2xl text-[13px] leading-relaxed shadow-sm border ${
-                      m.role === 'bot' ? 'bg-white text-slate-600 border-slate-50 rounded-tl-sm' : 'bg-cyan-50 text-cyan-800 border-cyan-100 rounded-tr-sm'
+                    <div className={`max-w-[80%] px-5 py-3.5 rounded-2xl text-[14px] leading-relaxed relative ${
+                      m.role === 'bot' 
+                        ? 'bg-white text-slate-700 border border-slate-100 rounded-tl-sm shadow-sm' 
+                        : 'bg-cyan-50 text-cyan-900 border border-cyan-100 rounded-tr-sm'
                     }`}>
                        {m.content}
+                       {m.role === 'bot' && i === messages.length - 1 && isTyping && (
+                         <div className="absolute -bottom-4 left-2 flex gap-1">
+                           <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce" />
+                           <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce delay-75" />
+                           <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce delay-150" />
+                         </div>
+                       )}
                     </div>
                  </div>
                ))}
+               {uploading && (
+                 <div className="flex gap-3">
+                    <div className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center bg-white border border-slate-100 text-slate-400 animate-spin">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    </div>
+                    <div className="bg-white px-5 py-3.5 rounded-2xl border border-slate-100 text-[13px] font-bold text-slate-400 italic">
+                      Neural Indexing in Progress...
+                    </div>
+                 </div>
+               )}
             </div>
 
-            {/* Input */}
-            <form onSubmit={sendMessage} className="p-4 border-t border-slate-50 bg-white/50">
-               <div className="relative">
-                  <input type="text" value={input} onChange={e => setInput(e.target.value)} placeholder="Neural input signal..."
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-xs font-bold text-slate-800 focus:border-cyan-500/50 outline-none transition-all pr-12" />
-                  <button type="submit" className="absolute right-2 top-1.5 p-2 text-cyan-500 hover:text-cyan-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+            {/* Footer / Input */}
+            <form onSubmit={sendMessage} className="p-6 border-t border-slate-100 bg-white shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.02)]">
+               <div className="flex items-center gap-3">
+                  <button 
+                    type="button" 
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl border transition-all ${
+                      isUploaded 
+                        ? 'bg-emerald-50 text-emerald-500 border-emerald-100' 
+                        : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-cyan-500/30 hover:text-cyan-500'
+                    }`}
+                  >
+                    {isUploaded ? (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                    ) : (
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                    )}
                   </button>
+
+                  <div className="flex-1 relative">
+                    <input 
+                      type="text" 
+                      value={input} 
+                      onChange={e => setInput(e.target.value)} 
+                      placeholder={isUploaded ? "Enter neural signal..." : "Upload CV first to begin..."}
+                      disabled={!isUploaded || isTyping}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all pr-14 disabled:opacity-50" 
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={!isUploaded || isTyping}
+                      className="absolute right-2 top-2 w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform disabled:opacity-0"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                    </button>
+                  </div>
                </div>
             </form>
           </motion.div>
@@ -84,10 +216,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       </AnimatePresence>
 
       {!inline && !isOpen && (
-        <motion.button initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setIsOpen(true)}
-          className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[22px] flex items-center justify-center text-white shadow-2xl shadow-cyan-500/30 hover:scale-110 transition-transform relative group">
+        <motion.button 
+          initial={{ scale: 0, rotate: -20 }} 
+          animate={{ scale: 1, rotate: 0 }} 
+          onClick={() => setIsOpen(true)}
+          className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[22px] flex items-center justify-center text-white shadow-2xl shadow-cyan-500/40 hover:scale-110 active:scale-95 transition-all relative group"
+        >
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white animate-pulse" />
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white animate-pulse" />
         </motion.button>
       )}
     </div>
