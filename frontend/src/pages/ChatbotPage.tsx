@@ -82,7 +82,7 @@ const ChatbotPage: React.FC = () => {
             { step: '04', title: 'Scoring', desc: 'Get a comprehensive score and direct feedback.' }
           ].map((item, i) => (
             <motion.div key={i} variants={itemVariants} className="text-center group">
-              <div className="w-16 h-16 bg-navy-800 rounded-3xl border border-white/5 mx-auto mb-6 flex items-center justify-center text-2xl font-black text-purple-400 group-hover:scale-110 transition-transform shadow-2xl">
+              <div className="w-20 h-20 bg-navy-800 rounded-[30px] border border-white/5 mx-auto mb-6 flex items-center justify-center text-2xl font-black text-purple-400 group-hover:scale-110 transition-transform shadow-2xl">
                 {item.step}
               </div>
               <h3 className="text-xl font-bold text-white mb-3 tracking-tight">{item.title}</h3>
@@ -184,35 +184,37 @@ const ChatbotPage: React.FC = () => {
            <motion.div 
              initial={{ opacity: 0, scale: 0.9 }}
              animate={{ opacity: 1, scale: 1 }}
-             transition={{ duration: 1 }}
-             className="relative lg:w-1/2 flex items-center justify-center"
+             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+             className="relative lg:w-1/2 flex items-center justify-center p-4"
            >
-             <div className="absolute inset-0 bg-purple-600/10 rounded-full blur-[120px] animate-pulse" />
-             <div className="relative glass-card p-16 rounded-[48px] border-white/5 flex items-center justify-center overflow-hidden min-h-[350px] w-full">
-                {/* Dynamic Waveform / Voice Interface */}
-                <div className="flex items-center gap-1.5 h-24">
-                   {[...Array(24)].map((_, i) => (
+             <div className="bg-glow w-[400px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-20" />
+             <div className="relative glass-card p-16 rounded-[40px] border-white/5 flex items-center justify-center overflow-hidden min-h-[400px] w-full shadow-[0_40px_120px_-30px_rgba(139,92,246,0.3)]">
+                <div className="absolute inset-0 bg-navy-900/60 rounded-[30px]" />
+                
+                {/* Advanced Dynamic Waveform */}
+                <div className="flex items-center gap-2 h-32 relative z-10">
+                   {[...Array(30)].map((_, i) => (
                      <motion.div 
                        key={i}
-                       className="w-1.5 bg-gradient-to-t from-purple-600 to-purple-400 rounded-full"
+                       className="w-2 bg-gradient-to-t from-purple-600 via-fuchsia-500 to-purple-400 rounded-full"
                        animate={{ 
-                         height: [20, Math.random() * 80 + 20, 20],
-                         opacity: [0.3, 1, 0.3]
+                         height: [20, Math.random() * 120 + 20, 20],
+                         opacity: [0.4, 1, 0.4]
                        }}
                        transition={{ 
-                         duration: 0.8 + Math.random() * 0.5, 
+                         duration: 0.7 + Math.random() * 0.5, 
                          repeat: Infinity, 
-                         delay: i * 0.05,
+                         delay: i * 0.03,
                          ease: "easeInOut"
                        }}
                      />
                    ))}
                 </div>
 
-                {/* Floating Status HUD */}
-                <div className="absolute top-10 right-10 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-900/50 border border-white/10 backdrop-blur-md">
-                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
-                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Processing Intent</span>
+                {/* Processing HUD */}
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 glass-card px-6 py-3 rounded-2xl border-white/10 bg-navy-900/80 shadow-2xl">
+                   <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
+                   <span className="text-xs font-black text-white uppercase tracking-[0.2em] whitespace-nowrap">Voice Processor Active</span>
                 </div>
              </div>
            </motion.div>

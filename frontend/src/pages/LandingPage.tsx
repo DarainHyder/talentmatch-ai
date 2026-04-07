@@ -49,82 +49,106 @@ const LandingPage: React.FC = () => {
             </div>
           </motion.div>
 
-             <div className="relative h-[600px] w-full flex items-center justify-center lg:block">
-                {/* Orbital Background */}
-                <motion.div 
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 60, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 opacity-20"
-                >
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] border border-purple-500/30 rounded-full" />
-                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] border border-purple-500/20 rounded-full" />
-                   <div className="absolute top-[10%] left-1/2 w-4 h-4 bg-purple-500 rounded-full blur-sm" />
-                </motion.div>
+             <div className="relative h-[650px] w-full flex items-center justify-center lg:block">
+                {/* Cinematic Ambient Glows */}
+                <div className="bg-glow w-[400px] h-[400px] top-0 -right-20 opacity-30" />
+                <div className="bg-glow w-[300px] h-[300px] bottom-0 -left-10 opacity-20" style={{ background: 'radial-gradient(circle, #7c3aed 0%, transparent 70%)' }} />
 
-                {/* Main AI Core Card */}
+                {/* Main AI Core Card (Referencing Smart Hire's 30px rounding) */}
                 <motion.div 
-                   initial={{ y: 20, opacity: 0 }}
+                   initial={{ y: 40, opacity: 0 }}
                    animate={{ y: 0, opacity: 1 }}
-                   className="relative z-10 glass-card p-1 items-center justify-center max-w-[500px] mx-auto lg:ml-auto"
+                   transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                   className="relative z-10 glass-card p-1 items-center justify-center max-w-[550px] mx-auto lg:ml-auto shadow-[0_30px_100px_-20px_rgba(139,92,246,0.3)]"
                 >
-                   <div className="bg-navy-900/40 rounded-[48px] p-8 overflow-hidden relative group">
-                      {/* Scanning Line */}
+                   <div className="bg-navy-900/60 rounded-[30px] p-10 overflow-hidden relative group aspect-square flex items-center justify-center">
+                      {/* Active AI Scanning Field */}
                       <motion.div 
-                         animate={{ top: ['0%', '100%', '0%'] }}
-                         transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                         className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent z-20 opacity-50"
+                         animate={{ top: ['-10%', '110%', '-10%'] }}
+                         transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+                         className="absolute left-0 right-0 h-24 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent z-20 pointer-events-none"
                       />
 
-                      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 drop-shadow-[0_0_30px_rgba(124,58,237,0.2)]">
+                      <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 filter drop-shadow(0 0 20px rgba(139,92,246,0.4))">
                          <defs>
-                           <radialGradient id="ringGrad">
-                              <stop offset="0%" stopColor="#7c3aed" />
-                              <stop offset="100%" stopColor="transparent" />
+                           <filter id="glow">
+                             <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                             <feMerge>
+                               <feMergeNode in="coloredBlur"/>
+                               <feMergeNode in="SourceGraphic"/>
+                             </feMerge>
+                           </filter>
+                         </defs>
+
+                         {/* Kinetic Node Network */}
+                         {[...Array(6)].map((_, i) => (
+                           <motion.g 
+                             key={i}
+                             animate={{ rotate: i % 2 === 0 ? 360 : -360 }}
+                             transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }}
+                             style={{ originX: '100px', originY: '100px' }}
+                           >
+                             <circle 
+                               cx="100" cy="100" 
+                               r={40 + i * 15} 
+                               stroke={i % 2 === 0 ? "#8b5cf6" : "#d946ef"} 
+                               strokeWidth="0.5" 
+                               fill="none" 
+                               strokeDasharray={i % 3 === 0 ? "5 10" : "20 5"} 
+                               opacity={0.1 + (i * 0.05)} 
+                             />
+                             {/* Floating Nodes on Rings */}
+                             <motion.circle 
+                               cx={100 + (40 + i * 15)} 
+                               cy="100" 
+                               r="3" 
+                               fill={i % 2 === 0 ? "#8b5cf6" : "#d946ef"} 
+                               filter="url(#glow)"
+                               animate={{ scale: [1, 1.5, 1] }}
+                               transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                             />
+                           </motion.g>
+                         ))}
+
+                         {/* Central Intelligent Core */}
+                         <motion.circle 
+                           cx="100" cy="100" r="20" 
+                           fill="url(#purpleGrad)"
+                           animate={{ scale: [0.95, 1.05, 0.95], opacity: [0.8, 1, 0.8] }}
+                           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                         />
+                         
+                         <defs>
+                           <radialGradient id="purpleGrad" cx="50%" cy="50%" r="50%">
+                             <stop offset="0%" stopColor="#d946ef" />
+                             <stop offset="100%" stopColor="#8b5cf6" />
                            </radialGradient>
                          </defs>
 
-                         {/* Core Nodes */}
-                         <motion.g animate={{ rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} style={{ originX: '100px', originY: '100px' }}>
-                            <circle cx="100" cy="100" r="40" stroke="#7c3aed" strokeWidth="0.5" fill="none" strokeDasharray="5 5" opacity="0.3" />
-                            <circle cx="100" cy="60" r="4" fill="#8b5cf6" />
-                            <circle cx="100" cy="140" r="4" fill="#8b5cf6" />
-                            <circle cx="60" cy="100" r="4" fill="#8b5cf6" />
-                            <circle cx="140" cy="100" r="4" fill="#8b5cf6" />
-                         </motion.g>
-
-                         {/* Inner Core Pulse */}
-                         <motion.circle 
-                           cx="100" cy="100" r="15" 
-                           fill="#7c3aed"
-                           animate={{ scale: [1, 1.2, 1], opacity: [0.8, 1, 0.8] }}
-                           transition={{ duration: 2, repeat: Infinity }}
-                         />
-                         <circle cx="100" cy="100" r="25" stroke="#7c3aed" strokeWidth="1" fill="none" opacity="0.5" />
-                         
-                         {/* Dynamic Data Lines */}
+                         {/* Connecting Synaptic Lines */}
                          <motion.path 
-                           d="M100 100 L160 40 M100 100 L40 160 M100 100 L160 160 M100 100 L40 40" 
-                           stroke="#7c3aed" strokeWidth="0.5" 
+                           d="M100 100 L140 60 M100 100 L60 140 M100 100 L140 140 M100 100 L60 60" 
+                           stroke="#8b5cf6" strokeWidth="1" 
                            strokeDasharray="100"
                            animate={{ strokeDashoffset: [200, 0] }}
-                           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                           opacity="0.2"
+                           transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                           opacity="0.3"
                          />
                       </svg>
 
-                      {/* Status HUD */}
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-4">
-                         {['Scanned', 'Analyzed', 'Matched'].map((tag, i) => (
-                           <motion.div 
-                             key={tag}
-                             initial={{ opacity: 0 }}
-                             animate={{ opacity: 1 }}
-                             transition={{ delay: 1 + i*0.2 }}
-                             className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-[8px] font-black uppercase tracking-tighter text-purple-400"
-                           >
-                             {tag}
-                           </motion.div>
-                         ))}
+                      {/* Real-time Processing HUD */}
+                      <div className="absolute top-8 left-8 flex flex-col gap-2">
+                         <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                            <span className="text-[10px] font-black text-white/50 uppercase tracking-[0.2em]">Neural Link: Active</span>
+                         </div>
+                         <div className="w-24 h-1 bg-white/5 rounded-full overflow-hidden">
+                            <motion.div 
+                              animate={{ x: ['-100%', '100%'] }}
+                              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                              className="w-1/2 h-full bg-purple-500" 
+                            />
+                         </div>
                       </div>
                    </div>
                 </motion.div>

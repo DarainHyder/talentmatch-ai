@@ -212,33 +212,33 @@ const Dashboard: React.FC = () => {
         </header>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-16">
           {[
             { label: 'Total Applicants', val: candidates.length, icon: <Icons.users />, color: 'text-purple-400' },
             { label: 'Avg Final Score', val: candidates.length ? (candidates.reduce((a,b) => a+b.final_score, 0)/candidates.length).toFixed(1) : '0', icon: <Icons.trending />, color: 'text-emerald-400' },
-            { label: 'Top Potential', val: candidates.filter(c => c.final_score > 70).length, icon: <Icons.star />, color: 'text-amber-400' },
+            { label: 'Top Potential', val: candidates.filter(c => c.final_score > 70).length, icon: <Icons.star />, color: 'text-fuchsia-400' },
             { label: 'Completion Rate', val: candidates.length ? `${((candidates.filter(c => c.interview_score > 0).length/candidates.length)*100).toFixed(0)}%` : '0%', icon: <Icons.grid />, color: 'text-blue-400' }
           ].map((s, i) => (
             <motion.div 
                key={i} 
-               initial={{ opacity: 0, y: 20 }}
+               initial={{ opacity: 0, y: 30 }}
                animate={{ opacity: 1, y: 0 }}
-               transition={{ delay: i * 0.1 }}
-               className="glass-card p-8 border-white/5 flex items-center justify-between group"
+               transition={{ delay: i * 0.1, ease: [0.16, 1, 0.3, 1] }}
+               className="glass-card p-10 border-white/5 flex items-center justify-between group shadow-xl"
             >
               <div>
-                <p className="text-slate-500 text-[10px] uppercase font-black tracking-widest mb-2">{s.label}</p>
-                <h3 className="text-3xl font-black text-white">{s.val}</h3>
+                <p className="text-slate-500 text-[11px] uppercase font-black tracking-[0.2em] mb-3">{s.label}</p>
+                <h3 className="text-4xl font-black text-white tracking-tighter">{s.val}</h3>
               </div>
-              <div className={`${s.color} bg-white/5 w-12 h-12 rounded-2xl flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform`}>
+              <div className={`${s.color} bg-white/5 w-16 h-16 rounded-[24px] flex items-center justify-center border border-white/10 group-hover:scale-110 transition-all group-hover:rotate-6`}>
                 {s.icon}
               </div>
             </motion.div>
           ))}
         </div>
 
-        {/* Candidates Table */}
-        <div className="glass-card border-white/5 overflow-hidden">
+        {/* Candidates Table Container */}
+        <div className="glass-card border-white/5 overflow-hidden shadow-2xl">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>

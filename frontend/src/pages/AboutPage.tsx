@@ -72,61 +72,88 @@ const AboutPage: React.FC = () => {
         </motion.div>
 
            <motion.div 
-             initial={{ opacity: 0, scale: 0.9 }}
-             animate={{ opacity: 1, scale: 1 }}
-             transition={{ duration: 1 }}
+             initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
+             animate={{ opacity: 1, scale: 1, rotate: 0 }}
+             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
              className="relative"
            >
-             <div className="absolute inset-0 bg-purple-600/10 rounded-full blur-[120px] animate-pulse" />
-             <div className="relative glass-card p-12 rounded-[64px] border-white/5 aspect-square flex items-center justify-center overflow-hidden group">
-                {/* Abstract AI Head / Neural Nexus */}
-                <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 transition-transform duration-700 group-hover:scale-110">
+             <div className="bg-glow w-[400px] h-[400px] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-30" />
+             
+             <div className="relative glass-card p-1 items-center justify-center aspect-square overflow-hidden group shadow-[0_40px_120px_-30px_rgba(139,92,246,0.4)]">
+                <div className="absolute inset-0 bg-navy-900/40 rounded-[30px]" />
+                
+                {/* Advanced Human-AI Nexus Silhouette */}
+                <svg viewBox="0 0 200 200" className="w-full h-full relative z-10 p-12">
                    <defs>
-                      <linearGradient id="nexusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                         <stop offset="0%" stopColor="#7c3aed" />
-                         <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                      <linearGradient id="nexusGradV3" x1="0%" y1="0%" x2="100%" y2="100%">
+                         <stop offset="0%" stopColor="#8b5cf6" />
+                         <stop offset="100%" stopColor="#d946ef" />
                       </linearGradient>
                    </defs>
 
-                   {/* Background Orbitals */}
+                   {/* Orbital Rings */}
                    <motion.circle 
-                     cx="100" cy="100" r="80" 
-                     stroke="url(#nexusGrad)" strokeWidth="0.5" fill="none" strokeDasharray="10 5" 
+                     cx="100" cy="100" r="90" 
+                     stroke="url(#nexusGradV3)" strokeWidth="0.5" fill="none" opacity="0.1"
                      animate={{ rotate: 360 }}
-                     transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                     transition={{ duration: 40, repeat: Infinity, ease: "linear" }}
                    />
 
-                   {/* The 'Head' Shape (Abstract) */}
-                   <path d="M100,40 Q140,40 150,90 Q160,140 100,160 Q40,140 50,90 Q60,40 100,40" fill="none" stroke="url(#nexusGrad)" strokeWidth="2" opacity="0.6" />
-                   
-                   {/* Neural Nodes */}
-                   {[
-                     { x: 100, y: 70 }, { x: 130, y: 100 }, { x: 70, y: 100 }, 
-                     { x: 100, y: 130 }, { x: 100, y: 100 }
-                   ].map((p, i) => (
-                     <motion.g key={i}>
+                   {/* Silhouette composed of Nodes */}
+                   <g className="filter drop-shadow(0 0 8px rgba(139,92,246,0.3))">
+                      {/* Abstract Silhouette Path Dots */}
+                      {[
+                        {x: 100, y: 40}, {x: 120, y: 45}, {x: 140, y: 60}, {x: 150, y: 85}, {x: 145, y: 110}, 
+                        {x: 125, y: 135}, {x: 100, y: 150}, {x: 75, y: 135}, {x: 55, y: 110}, {x: 50, y: 85},
+                        {x: 60, y: 60}, {x: 80, y: 45},
+                        {x: 100, y: 100}, {x: 115, y: 85}, {x: 85, y: 85}, {x: 100, y: 130}
+                      ].map((p, i) => (
                         <motion.circle 
-                          cx={p.x} cy={p.y} r="4" fill="#7c3aed"
-                          animate={{ opacity: [0.3, 1, 0.3], scale: [1, 1.3, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
+                          key={i}
+                          cx={p.x} cy={p.y} r="2" 
+                          fill="#8b5cf6"
+                          animate={{ 
+                            opacity: [0.2, 1, 0.2],
+                            scale: [1, 1.5, 1]
+                          }}
+                          transition={{ 
+                            duration: 2 + Math.random(), 
+                            repeat: Infinity, 
+                            delay: i * 0.1 
+                          }}
                         />
-                        {/* Connecting Lines */}
-                        <motion.line 
-                          x1="100" y1="100" x2={p.x} y2={p.y} 
-                          stroke="#7c3aed" strokeWidth="0.5" opacity="0.3"
-                          strokeDasharray="50"
-                          animate={{ strokeDashoffset: [100, 0] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                        />
-                     </motion.g>
-                   ))}
+                      ))}
 
-                   {/* Central Data Core */}
+                      {/* Connecting Data Lattice */}
+                      <motion.path 
+                        d="M100 40 L120 45 L140 60 L150 85 L145 110 L125 135 L100 150 L75 135 L55 110 L50 85 L60 60 L80 45 Z" 
+                        stroke="url(#nexusGradV3)" strokeWidth="0.5" fill="none" opacity="0.2"
+                        strokeDasharray="4 4"
+                      />
+                      
+                      <motion.path 
+                        d="M100 40 L100 150 M50 85 L150 85 M100 100 L150 85 M100 100 L50 85 M100 100 L120 45 M100 100 L80 45" 
+                        stroke="#8b5cf6" strokeWidth="0.5" opacity="0.1"
+                      />
+                   </g>
+
+                   {/* Pulse Pulse Core */}
                    <motion.circle 
-                     cx="100" cy="100" r="10" fill="#7c3aed"
-                     animate={{ shadow: ["0 0 10px #7c3aed", "0 0 30px #7c3aed", "0 0 10px #7c3aed"] }}
+                     cx="100" cy="100" r="10" 
+                     fill="url(#nexusGradV3)"
+                     animate={{ 
+                       scale: [1, 1.2, 1],
+                       opacity: [0.6, 1, 0.6]
+                     }}
+                     transition={{ duration: 2, repeat: Infinity }}
                    />
                 </svg>
+
+                {/* HUD Overlay */}
+                <div className="absolute bottom-10 right-10 flex items-center gap-3 glass-card px-5 py-2.5 rounded-2xl border-white/10 bg-navy-900/60 shadow-xl">
+                   <div className="w-2 h-2 bg-purple-500 rounded-full animate-ping" />
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest">Cognitive sync: 98%</span>
+                </div>
              </div>
            </motion.div>
       </section>
