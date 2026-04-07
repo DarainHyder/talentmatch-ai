@@ -3,16 +3,6 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
 const LandingPage: React.FC = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-  };
-
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-  };
-
   return (
     <div className="bg-navy-900 min-h-screen overflow-hidden">
       {/* ─── Hero Section ─────────────────────────────────────────────────── */}
@@ -67,11 +57,50 @@ const LandingPage: React.FC = () => {
              className="relative hidden lg:block"
           >
              <div className="absolute inset-0 bg-purple-500/10 rounded-full blur-[100px] animate-pulse" />
-             <div className="relative glass-card p-12 rounded-[64px] border-white/5 blob-ani">
-                <svg viewBox="0 0 24 24" className="w-[400px] h-[400px] text-purple-400/80 drop-shadow-[0_0_20px_rgba(124,58,237,0.3)]">
-                   <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V17a1 1 0 0 1-2 0v-.07A8 8 0 1 1 12 4a8 8 0 0 1 1 12.93zM13 10V7a1 1 0 0 0-2 0v3a1 1 0 0 0 2 0z" />
-                   <circle cx="12" cy="14" r="1.5" fill="currentColor" />
+             <div className="relative glass-card p-6 rounded-[48px] border-white/5 overflow-hidden group">
+                {/* Background Grid Pattern */}
+                <div className="absolute inset-0 opacity-10 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:40px_40px]" />
+                
+                <svg viewBox="0 0 200 200" className="w-[450px] h-[450px] transition-transform duration-700 group-hover:scale-105">
+                   <defs>
+                     <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.8" />
+                        <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.2" />
+                     </linearGradient>
+                   </defs>
+                   
+                   {/* Main Brain/AI Core Circle */}
+                   <circle cx="100" cy="100" r="70" stroke="url(#heroGrad)" strokeWidth="0.5" fill="none" className="animate-[pulse_4s_ease-in-out_infinite]" />
+                   <circle cx="100" cy="100" r="50" stroke="url(#heroGrad)" strokeWidth="1" fill="none" strokeDasharray="10 5" />
+                   
+                   {/* Intersecting Nodes */}
+                   <g className="text-purple-400">
+                      <path d="M60,100 L140,100 M100,60 L100,140 M72,72 L128,128 M128,72 L72,128" stroke="currentColor" strokeWidth="0.2" opacity="0.3" />
+                      
+                      <circle cx="100" cy="100" r="8" fill="currentColor" fillOpacity="0.8" />
+                      <circle cx="100" cy="100" r="15" stroke="currentColor" strokeWidth="0.5" fill="none" opacity="0.5" />
+                      
+                      {/* Satellite Nodes */}
+                      <circle cx="60" cy="100" r="4" fill="currentColor" />
+                      <circle cx="140" cy="100" r="4" fill="currentColor" />
+                      <circle cx="100" cy="60" r="4" fill="currentColor" />
+                      <circle cx="100" cy="140" r="4" fill="currentColor" />
+                      
+                      {/* Floating Data Bits */}
+                      <rect x="150" y="80" width="10" height="2" rx="1" fill="currentColor" opacity="0.4" />
+                      <rect x="40" y="120" width="8" height="2" rx="1" fill="currentColor" opacity="0.4" />
+                      <rect x="95" y="40" width="12" height="2" rx="1" fill="currentColor" opacity="0.4" />
+                   </g>
+
+                   {/* Scanning Beam */}
+                   <rect x="30" y="70" width="140" height="1" fill="url(#heroGrad)" className="animate-[bounce_6s_linear_infinite]" opacity="0.6" />
                 </svg>
+
+                {/* Status Floaties */}
+                <div className="absolute top-10 right-10 flex items-center gap-2 px-3 py-1.5 rounded-xl bg-navy-900/50 border border-white/10 backdrop-blur-md">
+                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-ping" />
+                   <span className="text-[10px] font-black text-white uppercase tracking-widest">AI Core Active</span>
+                </div>
              </div>
           </motion.div>
         </div>
