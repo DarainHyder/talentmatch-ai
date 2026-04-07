@@ -1,8 +1,15 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const Footer: React.FC = () => {
+  const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
+  const isLogin = location.pathname === '/login';
+
+  // Stability Fix: Prevent unmounting during SPA route transitions
+  if (isDashboard || isLogin) return null;
+
   return (
     <footer className="relative bg-white pt-32 pb-16 overflow-hidden border-t border-slate-100">
       <div className="bg-glow w-[500px] h-[500px] -bottom-40 left-1/2 -translate-x-1/2 opacity-5" style={{ background: 'radial-gradient(circle, #06b6d4 0%, transparent 70%)' }} />
@@ -45,7 +52,7 @@ const Footer: React.FC = () => {
         </div>
 
         <div className="pt-12 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-slate-400 text-sm font-bold tracking-wide">&copy; 2026 TalentMatch AI. Light V4 Architecture.</p>
+          <p className="text-slate-400 text-sm font-bold tracking-wide">&copy; 2026 TalentMatch AI. Light Stability V5.</p>
         </div>
       </div>
     </footer>

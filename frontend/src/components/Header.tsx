@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
 
+  // Stability Fix: Move the visibility check INSIDE the component.
+  // This keeps the component (and its hooks) in a fixed position in the tree,
+  // preventing React Hook sequence errors (Error #300) during navigation.
+  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
+  const isLogin = location.pathname === '/login';
+
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  if (isDashboard || isLogin) return null;
 
   const navLinks = [
     { name: 'Home', path: '/' },
@@ -27,16 +35,16 @@ const Header: React.FC = () => {
       animate={{ y: 0 }}
       className="fixed top-0 left-0 right-0 z-50 px-6 py-6 pointer-events-none"
     >
-      <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-white/10 shadow-[0_20px_50px_-20px_rgba(139,92,246,0.3)] pointer-events-auto transition-all duration-500 ${isScrolled ? 'bg-navy-900/90 backdrop-blur-2xl' : 'bg-navy-900/40'}`}>
+      <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-slate-100 shadow-[0_20px_50px_-20px_rgba(6,182,212,0.15)] pointer-events-auto transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-2xl' : 'bg-white/40'}`}>
         {/* Logo */}
         <Link to="/" className="flex items-center group">
-          <div className="w-11 h-11 bg-gradient-to-br from-purple-500 to-fuchsia-500 rounded-[14px] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+          <div className="w-11 h-11 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[14px] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
           <div className="ml-4">
-            <span className="text-xl font-black text-white tracking-tighter italic">TalentMatch<span className="text-fuchsia-500">.</span></span>
+            <span className="text-xl font-black text-slate-900 tracking-tighter italic">TalentMatch<span className="text-cyan-500">.</span></span>
           </div>
         </Link>
 
@@ -46,21 +54,21 @@ const Header: React.FC = () => {
             <Link
               key={link.path}
               to={link.path}
-              className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-white relative group ${
-                location.pathname === link.path ? 'text-white' : 'text-slate-400'
+              className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-cyan-600 relative group ${
+                location.pathname === link.path ? 'text-cyan-600' : 'text-slate-400'
               }`}
             >
               {link.name}
               <motion.span 
                 initial={false}
                 animate={{ width: location.pathname === link.path ? '100%' : '0%' }}
-                className="absolute -bottom-2 left-0 h-0.5 bg-purple-500" 
+                className="absolute -bottom-2 left-0 h-0.5 bg-cyan-500" 
               />
-              <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-purple-500 group-hover:w-full transition-all duration-300" />
+              <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-cyan-500 group-hover:w-full transition-all duration-300" />
             </Link>
           ))}
           
-          <div className="h-6 w-[1px] bg-white/10 mx-2" />
+          <div className="h-6 w-[1px] bg-slate-200 mx-2" />
 
           {!user ? (
             <Link to="/login" className="btn-primary scale-90 !py-3">
@@ -69,14 +77,14 @@ const Header: React.FC = () => {
           ) : (
             <button 
               onClick={logout}
-              className="text-[11px] font-black uppercase tracking-[0.2em] text-red-400 hover:text-red-300 transition-colors"
+              className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500 hover:text-red-600 transition-colors"
             >
               Sign Out
             </button>
           )}
         </nav>
 
-        {/* Mobile menu button (Simplified for V3) */}
+        {/* Mobile menu button */}
         <Link to="/chatbot" className="md:hidden btn-primary scale-75">
           Demo
         </Link>

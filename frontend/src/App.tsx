@@ -16,7 +16,7 @@ import AboutPage      from './pages/AboutPage';
 import ChatbotPage    from './pages/ChatbotPage';
 
 // ---------------------------------------------------------------------------
-// Scroll Restoration — Ensures page starts at top on route change
+// Scroll Restoration
 // ---------------------------------------------------------------------------
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -25,7 +25,7 @@ const ScrollToTop = () => {
 };
 
 // ---------------------------------------------------------------------------
-// Auth guard — redirects to /login if not authenticated
+// Protected Route
 // ---------------------------------------------------------------------------
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -41,28 +41,23 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 // ---------------------------------------------------------------------------
-// App Routes
+// App Routes Shell
 // ---------------------------------------------------------------------------
 const AppRoutes: React.FC = () => {
-  const location = useLocation();
-  const isDashboard = location.pathname.startsWith('/dashboard') || location.pathname.startsWith('/admin');
-  const isLogin = location.pathname === '/login';
-
   return (
     <>
       <ScrollToTop />
-      {/* Hide Header/Footer on Dashboard/Admin/Login for cleaner UI */}
-      {!isDashboard && !isLogin && <Header />}
+      {/* Header and Footer now handle their own visibility internally. 
+          This keeps the React component tree stable and prevents Hook Error #300. */}
+      <Header />
       
       <main className="flex-grow">
         <Routes>
-          {/* Public */}
           <Route path="/"         element={<LandingPage />} />
           <Route path="/about"    element={<AboutPage />}   />
           <Route path="/chatbot"  element={<ChatbotPage />} />
           <Route path="/login"    element={<LoginPage />}   />
 
-          {/* Admin — JWT protected */}
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />
@@ -70,20 +65,16 @@ const AppRoutes: React.FC = () => {
             <ProtectedRoute><AdminJobSetup /></ProtectedRoute>
           } />
 
-          {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
 
-      {!isDashboard && !isLogin && <Footer />}
+      <Footer />
       <ChatWidget />
     </>
   );
 };
 
-// ---------------------------------------------------------------------------
-// Root
-// ---------------------------------------------------------------------------
 const App: React.FC = () => {
   return (
     <AuthProvider>
