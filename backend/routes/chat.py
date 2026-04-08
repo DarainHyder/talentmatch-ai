@@ -55,150 +55,142 @@ def _file_too_large(file) -> bool:
 @chat_bp.route("/api/chat/start", methods=["POST"])
 def chat_start():
     """
-    Start an interview session.
-
-    multipart/form-data fields:
-      name     : str
-      email    : str
-      cv_file  : file (PDF or DOCX, max 5 MB)
-
-    Returns:
-      { qualified: false, message: str }
-      { qualified: true, session_id: str, first_question: str,
-        job_title: str, matched_skills: list, cv_score: float }
+    Start an interview session. (Level 2 Global Safety Net)
     """
-    # --- Validate form fields ---
-    name  = request.form.get("name", "").strip()
-    email = request.form.get("email", "").strip()
-
-    if not name or not email:
-        return jsonify({"error": "Name and email are required."}), 400
-
-    if "cv_file" not in request.files:
-        return jsonify({"error": "cv_file is required."}), 400
-
-    cv_file = request.files["cv_file"]
-
-    if not cv_file.filename:
-        return jsonify({"error": "No file selected."}), 400
-
-    if not _allowed_file(cv_file.filename):
-        return jsonify({"error": "Only PDF and DOCX files are accepted."}), 415
-
-    if _file_too_large(cv_file):
-        return jsonify({"error": "File exceeds the 5 MB limit."}), 413
-
-    # --- Parse CV ---
     try:
-        cv_text = parse_cv(cv_file)
-    except Exception as e:
-        return jsonify({"error": f"CV parsing failed: {str(e)}"}), 422
+        # --- Validate form fields ---
+        name  = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
 
-    if not cv_text.strip():
-        return jsonify({"error": "CV appears to be empty or unreadable."}), 422
+        if not name or not email:
+            return jsonify({"error": "Name and email are required."}), 400
 
-    # --- Load current Job Description ---
-    job = get_jd()
-    if not job:
-        return jsonify({"error": "No job description configured. Contact admin."}), 503
+        if "cv_file" not in request.files:
+            return jsonify({"error": "cv_file is required."}), 400
 
-    job_title       = job.get("title", "")
-    job_description = job.get("description", "")
-    skills_raw      = job.get("required_skills", "")
-    required_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+        cv_file = request.files["cv_file"]
 
-    # --- Match skills ---
-    try:
-        match_result = match_skills(cv_text, required_skills, job_description)
-    except Exception as e:
-        print(f"[chat] match_skills failed: {e}")
-        # Severe fallback if even match_skills' internal fallback fails
-        match_result = {
-            "cv_score": 10.0,
-            "matched_skills": [],
-            "missing_skills": required_skills
-        }
-    
-    cv_score         = match_result.get("cv_score", 0.0)
-    matched_skills   = match_result.get("matched_skills", [])
-    missing_skills   = match_result.get("missing_skills", [])
+        if not cv_file.filename:
+            return jsonify({"error": "No file selected."}), 400
 
-    # --- Count every CV received (regardless of outcome) ---
-    try:
-        database.increment_stat("total_cvs_received")
-    except Exception:
-        pass
+        if not _allowed_file(cv_file.filename):
+            return jsonify({"error": "Only PDF and DOCX files are accepted."}), 415
 
-    # --- Qualification gate (threshold = 30 %) ---
-    if not is_qualified(cv_score):
-        # Count rejection — do NOT store candidate PII
+        if _file_too_large(cv_file):
+            return jsonify({"error": "File exceeds the 5 MB limit."}), 413
+
+        # --- Parse CV ---
         try:
-            database.increment_stat("total_rejected")
+            cv_text = parse_cv(cv_file)
+        except Exception as e:
+            return jsonify({"error": f"CV parsing failed: {str(e)}"}), 422
+
+        if not cv_text.strip():
+            return jsonify({"error": "CV appears to be empty or unreadable."}), 422
+
+        # --- Load current Job Description ---
+        job = get_jd()
+        if not job:
+            return jsonify({"error": "No job description configured. Contact admin."}), 503
+
+        job_title       = job.get("title", "")
+        job_description = job.get("description", "")
+        skills_raw      = job.get("required_skills", "")
+        required_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+
+        # --- Match skills ---
+        try:
+            match_result = match_skills(cv_text, required_skills, job_description)
+        except Exception as e:
+            print(f"[chat] match_skills failed: {e}")
+            match_result = {
+                "cv_score": 10.0,
+                "matched_skills": [],
+                "missing_skills": required_skills
+            }
+        
+        cv_score         = match_result.get("cv_score", 0.0)
+        matched_skills   = match_result.get("matched_skills", [])
+        missing_skills   = match_result.get("missing_skills", [])
+
+        # --- Count every CV received ---
+        try:
+            database.increment_stat("total_cvs_received")
         except Exception:
             pass
 
+        # --- Qualification gate ---
+        if not is_qualified(cv_score):
+            try:
+                database.increment_stat("total_rejected")
+            except Exception:
+                pass
+
+            return jsonify({
+                "qualified": False,
+                "message":   (
+                    "Thank you for applying. After reviewing your CV, "
+                    "we found that your current profile does not meet the minimum "
+                    f"requirements ({CV_THRESHOLD:.0f}% match needed). "
+                    "We encourage you to apply again when you have gained more "
+                    "of the required skills."
+                ),
+                "cv_score":       round(cv_score, 1),
+                "matched_skills": matched_skills,
+                "missing_skills": missing_skills,
+            }), 200
+
+        # --- Generate interview questions ---
+        try:
+            question_list = generate_questions(
+                cv_text=cv_text,
+                job_title=job_title,
+                job_description=job_description,
+                matched_skills=matched_skills,
+            )
+        except Exception as e:
+            print(f"[chat] generate_questions failed: {e}")
+            return jsonify({"error": f"AI Engine failed to generate questions: {str(e)}"}), 500
+
+        question_list = question_list[:5]
+
+        # --- Create session ---
+        try:
+            sid = session_store.create_session(
+                name=name,
+                email=email,
+                cv_text=cv_text,
+                matched_skills=matched_skills,
+                cv_score=cv_score,
+                question_list=question_list,
+            )
+        except Exception as e:
+            print(f"[chat] create_session failed: {e}")
+            return jsonify({"error": f"Session creation failed: {str(e)}"}), 500
+
+        # --- Final cleanup and logging ---
+        try:
+            database.increment_stat("total_interviews_started")
+            session_store.append_to_transcript(sid, "bot", question_list[0])
+        except Exception as e:
+            print(f"[chat] Final logging failed (continuing session): {e}")
+
         return jsonify({
-            "qualified": False,
-            "message":   (
-                "Thank you for applying. After reviewing your CV, "
-                "we found that your current profile does not meet the minimum "
-                f"requirements ({CV_THRESHOLD:.0f}% match needed). "
-                "We encourage you to apply again when you have gained more "
-                "of the required skills."
-            ),
-            "cv_score":       round(cv_score, 1),
-            "matched_skills": matched_skills,
-            "missing_skills": missing_skills,
+            "qualified":       True,
+            "session_id":      sid,
+            "first_question":  question_list[0],
+            "job_title":       job_title,
+            "matched_skills":  matched_skills,
+            "missing_skills":  missing_skills,
+            "cv_score":        round(cv_score, 1),
         }), 200
 
-    # --- Generate interview questions ---
-    try:
-        question_list = generate_questions(
-            cv_text=cv_text,
-            job_title=job_title,
-            job_description=job_description,
-            matched_skills=matched_skills,
-        )
     except Exception as e:
-        print(f"[chat] generate_questions failed: {e}")
-        # Return specific error instead of generic 500
-        return jsonify({"error": f"AI Engine failed to generate questions: {str(e)}"}), 500
-
-    # Ensure exactly 5 questions
-    question_list = question_list[:5]
-
-    # --- Create session (also inserts candidate to DB) ---
-    try:
-        sid = session_store.create_session(
-            name=name,
-            email=email,
-            cv_text=cv_text,
-            matched_skills=matched_skills,
-            cv_score=cv_score,
-            question_list=question_list,
-        )
-    except Exception as e:
-        print(f"[chat] create_session failed: {e}")
-        return jsonify({"error": f"Session creation failed: {str(e)}"}), 500
-
-    # Count interview started
-    try:
-        database.increment_stat("total_interviews_started")
-    except Exception:
-        pass
-
-    # Log the first bot question in transcript
-    session_store.append_to_transcript(sid, "bot", question_list[0])
-
-    return jsonify({
-        "qualified":       True,
-        "session_id":      sid,
-        "first_question":  question_list[0],
-        "job_title":       job_title,
-        "matched_skills":  matched_skills,
-        "missing_skills":  missing_skills,
-        "cv_score":        round(cv_score, 1),
-    }), 200
+        print(f"[chat] CRITICAL ROUTE CRASH: {e}")
+        return jsonify({
+            "error": "The recruitment engine encountered an unexpected error during initialization.",
+            "details": str(e)
+        }), 500
 
 
 # ---------------------------------------------------------------------------

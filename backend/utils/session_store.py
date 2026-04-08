@@ -352,4 +352,4 @@ def complete_session(
 # Bootstrap — create sessions table on import
 # ---------------------------------------------------------------------------
 
-_init_sessions_table()
+# _init_sessions_table() <-- REMOVED. Called explicitly in app.py now.

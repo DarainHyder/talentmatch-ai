@@ -61,7 +61,12 @@ def create_app() -> Flask:
 
     # --- Database bootstrap ---
     from backend.utils.database import init_db
-    init_db()
+    from backend.utils.session_store import _init_sessions_table
+    try:
+        init_db()
+        _init_sessions_table()
+    except Exception as e:
+        print(f"❌ DATABASE BOOTSTRAP FAILED: {e}")
 
     # --- Register blueprints ---
     from backend.routes.auth import auth_bp
@@ -72,6 +77,10 @@ def create_app() -> Flask:
 
     from backend.routes.jobs import jobs_bp
     app.register_blueprint(jobs_bp)
+
+    # Legacy Blueprint (Disabled to prevent Pinecone import crashes)
+    # from backend.routes.candidates import candidates_bp
+    # app.register_blueprint(candidates_bp)
 
     # --- Health check ---
     @app.route("/health")

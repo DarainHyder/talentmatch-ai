@@ -368,4 +368,4 @@ def get_stats() -> dict:
 # Bootstrap — create tables immediately on import
 # ---------------------------------------------------------------------------
 
-init_db()
+# init_db()  <-- REMOVED. Called explicitly in app.py now.
