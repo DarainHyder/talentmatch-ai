@@ -49,13 +49,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       });
       const data = await res.json();
       
-      if (data.session_id) {
+      if (data.session_id && data.qualified) {
         setSessionId(data.session_id);
         setIsUploaded(true);
         setMessages(prev => [
           ...prev, 
           { role: 'user', content: `Attached CV: ${file.name}` },
-          { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Neural Indexing Completed. Welcome ${data.name || 'Candidate'}. Let's begin the behavioral assessment.` }
+          { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Welcome ${data.name || 'Candidate'}. Neural Indexing Completed (${data.cv_score}% match).` },
+          { role: 'bot', content: data.first_question }
+        ]);
+      } else if (data.qualified === false) {
+        setMessages(prev => [
+          ...prev,
+          { role: 'user', content: `Attached CV: ${file.name}` },
+          { role: 'bot', content: data.message }
         ]);
       }
     } catch (err) {
