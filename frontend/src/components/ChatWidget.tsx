@@ -12,9 +12,11 @@ interface ChatWidgetProps {
 const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([
-    { role: 'bot', content: "Neural link established. I am your TalentMatch AI co-pilot. Please upload your CV to initialize the screening protocol." }
+    { role: 'bot', content: "Neural link established. I am your TalentMatch AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }
   ]);
   const [input, setInput] = useState('');
+  const [userName, setUserName] = useState('');
+  const [userEmail, setUserEmail] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isUploaded, setIsUploaded] = useState(false);
@@ -36,10 +38,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
 
     setUploading(true);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('cv_file', file);
+    formData.append('name', userName || 'Candidate');
+    formData.append('email', userEmail || 'candidate@talentmatch.ai');
 
     try {
-      const res = await fetch(`${API_BASE}/api/upload-cv`, {
+      const res = await fetch(`${API_BASE}/api/chat/start`, {
         method: 'POST',
         body: formData,
       });
@@ -71,14 +75,18 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     setIsTyping(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat`, {
+      const res = await fetch(`${API_BASE}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, message: userMsg }),
       });
       const data = await res.json();
       
-      setMessages(prev => [...prev, { role: 'bot', content: data.response }]);
+      if (data.done) {
+        setMessages(prev => [...prev, { role: 'bot', content: `${data.message}\n\nFinal Score: ${data.final_score}%` }]);
+      } else {
+        setMessages(prev => [...prev, { role: 'bot', content: data.question }]);
+      }
     } catch (err) {
       setMessages(prev => [...prev, { role: 'bot', content: "Neural lag detected. Attempting to reconnect to core..." }]);
     } finally {
@@ -188,26 +196,46 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
                     {isUploaded ? (
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                     ) : (
-                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" /></svg>
                     )}
                   </button>
 
-                  <div className="flex-1 relative">
-                    <input 
-                      type="text" 
-                      value={input} 
-                      onChange={e => setInput(e.target.value)} 
-                      placeholder={isUploaded ? "Enter neural signal..." : "Upload CV first to begin..."}
-                      disabled={!isUploaded || isTyping}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all pr-14 disabled:opacity-50" 
-                    />
-                    <button 
-                      type="submit" 
-                      disabled={!isUploaded || isTyping}
-                      className="absolute right-2 top-2 w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform disabled:opacity-0"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
-                    </button>
+                  <div className="flex-1 flex flex-col gap-2">
+                    {!isUploaded && (
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          placeholder="Name"
+                          className="w-1/2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-800"
+                          value={userName}
+                          onChange={e => setUserName(e.target.value)}
+                        />
+                        <input 
+                          type="email" 
+                          placeholder="Email"
+                          className="w-1/2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-slate-800"
+                          value={userEmail}
+                          onChange={e => setUserEmail(e.target.value)}
+                        />
+                      </div>
+                    )}
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        value={input} 
+                        onChange={e => setInput(e.target.value)} 
+                        placeholder={isUploaded ? "Enter neural signal..." : "Enter info & upload CV..."}
+                        disabled={!isUploaded || isTyping}
+                        className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all pr-14 disabled:opacity-50" 
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={!isUploaded || isTyping}
+                        className="absolute right-2 top-2 w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform disabled:opacity-0"
+                      >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
+                      </button>
+                    </div>
                   </div>
                </div>
             </form>
