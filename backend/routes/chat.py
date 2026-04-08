@@ -108,10 +108,20 @@ def chat_start():
     required_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
 
     # --- Match skills ---
-    match_result = match_skills(cv_text, required_skills, job_description)
-    cv_score         = match_result["cv_score"]
-    matched_skills   = match_result["matched_skills"]
-    missing_skills   = match_result["missing_skills"]
+    try:
+        match_result = match_skills(cv_text, required_skills, job_description)
+    except Exception as e:
+        print(f"[chat] match_skills failed: {e}")
+        # Severe fallback if even match_skills' internal fallback fails
+        match_result = {
+            "cv_score": 10.0,
+            "matched_skills": [],
+            "missing_skills": required_skills
+        }
+    
+    cv_score         = match_result.get("cv_score", 0.0)
+    matched_skills   = match_result.get("matched_skills", [])
+    missing_skills   = match_result.get("missing_skills", [])
 
     # --- Count every CV received (regardless of outcome) ---
     try:
@@ -119,7 +129,7 @@ def chat_start():
     except Exception:
         pass
 
-    # --- Qualification gate (threshold = 60 %) ---
+    # --- Qualification gate (threshold = 30 %) ---
     if not is_qualified(cv_score):
         # Count rejection — do NOT store candidate PII
         try:
@@ -130,7 +140,7 @@ def chat_start():
         return jsonify({
             "qualified": False,
             "message":   (
-                "Thank you for applying to this position. After reviewing your CV, "
+                "Thank you for applying. After reviewing your CV, "
                 "we found that your current profile does not meet the minimum "
                 f"requirements ({CV_THRESHOLD:.0f}% match needed). "
                 "We encourage you to apply again when you have gained more "
@@ -150,7 +160,9 @@ def chat_start():
             matched_skills=matched_skills,
         )
     except Exception as e:
-        return jsonify({"error": f"Question generation failed: {str(e)}"}), 500
+        print(f"[chat] generate_questions failed: {e}")
+        # Return specific error instead of generic 500
+        return jsonify({"error": f"AI Engine failed to generate questions: {str(e)}"}), 500
 
     # Ensure exactly 5 questions
     question_list = question_list[:5]
@@ -166,6 +178,7 @@ def chat_start():
             question_list=question_list,
         )
     except Exception as e:
+        print(f"[chat] create_session failed: {e}")
         return jsonify({"error": f"Session creation failed: {str(e)}"}), 500
 
     # Count interview started

@@ -55,14 +55,13 @@ _nlp = None
 def _get_nlp():
     global _nlp
     if _nlp is None:
-        import spacy
         try:
+            import spacy
             _nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            raise RuntimeError(
-                "spaCy model not found. Run: python -m spacy download en_core_web_sm"
-            )
-    return _nlp
+        except Exception as e:
+            print(f"[interview_engine] WARNING: spaCy/en_core_web_sm not found. Falling back to basic string matching for scoring. (Error: {e})")
+            _nlp = "FAILED"
+    return _nlp if _nlp != "FAILED" else None
 
 
 # ===========================================================================
@@ -200,9 +199,14 @@ def needs_followup(answer_text: str) -> bool:
         
     # Check for "vague fluff" — text the user typed out but contains zero actual data
     nlp = _get_nlp()
-    doc = nlp(answer_text.strip().lower())
-    tokens_lower = {t.lemma_ for t in doc if t.is_alpha}
-    keyword_hits = len(tokens_lower & _POSITIVE_KEYWORDS)
+    if not nlp:
+        # Basic word match fallback
+        tokens_lower = set(answer_text.strip().lower().split())
+        keyword_hits = len(tokens_lower & _POSITIVE_KEYWORDS)
+    else:
+        doc = nlp(answer_text.strip().lower())
+        tokens_lower = {t.lemma_ for t in doc if t.is_alpha}
+        keyword_hits = len(tokens_lower & _POSITIVE_KEYWORDS)
     
     # If it's less than 50 words and contains absolutely NO action/technical keywords, they are being vague
     if word_count < 50 and keyword_hits == 0:
@@ -255,20 +259,21 @@ def score_answer(answer_text: str) -> dict:
 
     is_ai = detect_ai_content(answer_text)
 
-    nlp = _get_nlp()
-    doc = nlp(answer_text.strip())
-
-    # --- Component 1: word count ---
-    word_count        = len([t for t in doc if not t.is_punct and not t.is_space])
-    word_count_score  = min(word_count / 50, 1.0) * 30
-
     # --- Component 2: positive keyword hits ---
-    tokens_lower      = {t.lemma_.lower() for t in doc if t.is_alpha}
-    keyword_hits      = len(tokens_lower & _POSITIVE_KEYWORDS)
+    nlp = _get_nlp()
+    if not nlp:
+        tokens_lower  = set(answer_text.strip().lower().split())
+        keyword_hits  = len(tokens_lower & _POSITIVE_KEYWORDS)
+        sentence_count = len(re.split(r'[.!?]+', answer_text))
+    else:
+        doc = nlp(answer_text.strip())
+        tokens_lower  = {t.lemma_.lower() for t in doc if t.is_alpha}
+        keyword_hits  = len(tokens_lower & _POSITIVE_KEYWORDS)
+        sentence_count = len(list(doc.sents))
+
     keyword_score     = min(keyword_hits / 3, 1.0) * 40
 
     # --- Component 3: sentence structure ---
-    sentence_count    = len(list(doc.sents))
     sentence_score    = min(sentence_count / 3, 1.0) * 30
 
     final = word_count_score + keyword_score + sentence_score

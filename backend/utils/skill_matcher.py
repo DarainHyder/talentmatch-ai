@@ -91,14 +91,14 @@ _nlp = None
 def _get_nlp():
     global _nlp
     if _nlp is None:
-        import spacy
         try:
+            import spacy
+            # Attempt to load, but don't crash if missing
             _nlp = spacy.load("en_core_web_sm")
-        except OSError:
-            raise RuntimeError(
-                "spaCy model not found. Run: python -m spacy download en_core_web_sm"
-            )
-    return _nlp
+        except Exception as e:
+            print(f"[skill_matcher] WARNING: spaCy/en_core_web_sm not found. Falling back to basic string matching. (Error: {e})")
+            _nlp = "FAILED" # Sentinel to prevent repeated attempts
+    return _nlp if _nlp != "FAILED" else None
 
 
 # ---------------------------------------------------------------------------
@@ -107,6 +107,10 @@ def _get_nlp():
 
 def _lemmatize_text(text: str) -> set:
     nlp  = _get_nlp()
+    if not nlp:
+        # Fallback: simple tokenisation
+        return set(re.findall(r'\b\w{3,}\b', text.lower()))
+        
     doc  = nlp(text[:120_000])   # cap to keep processing fast
     return {
         t.lemma_.lower()
@@ -146,14 +150,15 @@ def _skill_present(skill: str, cv_lemmas: set, cv_text_lower: str) -> tuple[bool
 
     # ── Strategy 2: lemma set match ────────────────────────────────────────
     nlp = _get_nlp()
-    skill_doc    = nlp(skill_norm)
-    skill_lemmas = {
-        t.lemma_.lower()
-        for t in skill_doc
-        if not t.is_stop and not t.is_punct and t.is_alpha
-    }
-    if skill_lemmas and skill_lemmas.issubset(cv_lemmas):
-        return True, 0.90
+    if nlp:
+        skill_doc    = nlp(skill_norm)
+        skill_lemmas = {
+            t.lemma_.lower()
+            for t in skill_doc
+            if not t.is_stop and not t.is_punct and t.is_alpha
+        }
+        if skill_lemmas and skill_lemmas.issubset(cv_lemmas):
+            return True, 0.90
 
     # ── Strategy 3: partial substring (skill is substring of a cv phrase) ─
     for token in cv_text_lower.split():
@@ -259,25 +264,26 @@ def match_skills(
         cv_score            : float   (0-100, composite)
     }
     """
-    if not required_skills_list:
-        return {
-            "matched_skills":      [],
-            "missing_skills":      [],
-            "skill_match_percent": 0.0,
-            "tfidf_similarity":    0.0,
-            "experience_bonus":    0.0,
-            "cv_score":            0.0,
-        }
+    try:
+        if not required_skills_list:
+            return {
+                "matched_skills":      [],
+                "missing_skills":      [],
+                "skill_match_percent": 0.0,
+                "tfidf_similarity":    0.0,
+                "experience_bonus":    0.0,
+                "cv_score":            0.0,
+            }
 
-    cv_text_lower = cv_text.lower()
-    cv_clean = cv_text[:3000].replace('\n', ' ')
-    
-    # --- GEMINI SEMANTIC EXTRACTION ---
-    api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
-    api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
-    
-    if api_keys:
-        prompt = f"""You are an elite ATS (Applicant Tracking System) recruiter.
+        cv_text_lower = cv_text.lower()
+        cv_clean = cv_text[:3000].replace('\n', ' ')
+        
+        # --- GEMINI SEMANTIC EXTRACTION ---
+        api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
+        api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
+        
+        if api_keys:
+            prompt = f"""You are an elite ATS (Applicant Tracking System) recruiter.
 Evaluate the candidate's CV strictly against the Job Description and the Required Skills. Provide a true semantic match (e.g. if skill is 'Frontend', and CV says 'React', that counts as a match).
 
 Job Description: {job_description_text}
@@ -292,78 +298,89 @@ Return ONLY valid JSON format exactly matching the schema below:
     "missing_skills": ["skill3"]
 }}"""
 
-        for attempt, key in enumerate(api_keys):
-            try:
-                from google import genai
-                import json
-                
-                client = genai.Client(api_key=key)
-                response = client.models.generate_content(
-                    model="gemini-2.0-flash",
-                    contents=prompt
-                )
-                
-                raw_text = response.text.strip()
-                
-                # Strip markdown blocks if present
-                if "```json" in raw_text:
-                    raw_text = raw_text.split("```json")[1].split("```")[0].strip()
-                elif "```" in raw_text:
-                    raw_text = raw_text.split("```")[1].split("```")[0].strip()
-                
-                data = json.loads(raw_text)
-                final_score = float(data.get("cv_score", 0.0))
-                print(f"DEBUG: CV Score Analysis => {final_score}")
-                
-                return {
-                    "matched_skills": data.get("matched_skills", []),
-                    "missing_skills": data.get("missing_skills", []),
-                    "cv_score": final_score,
-                    "method": "gemini-ai"
-                }
-            except Exception as e:
-                print(f"[skill_matcher] Gemini failed ({e}), attempting next key or fallback.")
-                if attempt < len(api_keys) - 1:
-                    continue
-                break # Fallback to heuristic
-                
-    # --- FALLBACK: HEURISTIC MATCHING ---
-    cv_lemmas = _lemmatize_text(cv_text)
-    matched:     List[str]   = []
-    missing:     List[str]   = []
-    confidences: List[float] = []
+            for attempt, key in enumerate(api_keys):
+                try:
+                    from google import genai
+                    import json
+                    
+                    client = genai.Client(api_key=key)
+                    response = client.models.generate_content(
+                        model="gemini-2.0-flash",
+                        contents=prompt
+                    )
+                    
+                    raw_text = response.text.strip()
+                    
+                    # Strip markdown blocks if present
+                    if "```json" in raw_text:
+                        raw_text = raw_text.split("```json")[1].split("```")[0].strip()
+                    elif "```" in raw_text:
+                        raw_text = raw_text.split("```")[1].split("```")[0].strip()
+                    
+                    data = json.loads(raw_text)
+                    final_score = float(data.get("cv_score", 0.0))
+                    print(f"DEBUG: CV Score Analysis => {final_score}")
+                    
+                    return {
+                        "matched_skills": data.get("matched_skills", []),
+                        "missing_skills": data.get("missing_skills", []),
+                        "cv_score": final_score,
+                        "method": "gemini-ai"
+                    }
+                except Exception as e:
+                    print(f"[skill_matcher] Gemini failed ({e}), attempting next key or fallback.")
+                    if attempt < len(api_keys) - 1:
+                        continue
+                    break # Fallback to heuristic
+                    
+        # --- FALLBACK: HEURISTIC MATCHING ---
+        cv_lemmas = _lemmatize_text(cv_text)
+        matched:     List[str]   = []
+        missing:     List[str]   = []
+        confidences: List[float] = []
 
-    for skill in required_skills_list:
-        if not skill.strip(): continue
-        found, conf = _skill_present(skill, cv_lemmas, cv_text_lower)
-        if found:
-            matched.append(skill)
-            confidences.append(conf)
+        for skill in required_skills_list:
+            if not skill.strip(): continue
+            found, conf = _skill_present(skill, cv_lemmas, cv_text_lower)
+            if found:
+                matched.append(skill)
+                confidences.append(conf)
+            else:
+                missing.append(skill)
+
+        total = len([s for s in required_skills_list if s.strip()])
+        if total > 0 and confidences:
+            avg_conf          = sum(confidences) / len(confidences)
+            raw_match_ratio   = len(matched) / total
+            skill_match_pct   = round(raw_match_ratio * avg_conf * 100, 2)
         else:
-            missing.append(skill)
+            skill_match_pct   = 0.0
 
-    total = len([s for s in required_skills_list if s.strip()])
-    if total > 0 and confidences:
-        avg_conf          = sum(confidences) / len(confidences)
-        raw_match_ratio   = len(matched) / total
-        skill_match_pct   = round(raw_match_ratio * avg_conf * 100, 2)
-    else:
-        skill_match_pct   = 0.0
+        jd_for_tfidf = job_description_text.strip() or " ".join(required_skills_list)
+        tfidf_score  = round(_tfidf_similarity(cv_text, jd_for_tfidf) * 100, 2)
+        exp_bonus    = round(_experience_years(cv_text), 2)
 
-    jd_for_tfidf = job_description_text.strip() or " ".join(required_skills_list)
-    tfidf_score  = round(_tfidf_similarity(cv_text, jd_for_tfidf) * 100, 2)
-    exp_bonus    = round(_experience_years(cv_text), 2)
+        cv_score = round(skill_match_pct * 0.50 + tfidf_score * 0.30 + exp_bonus * 0.20, 2)
 
-    cv_score = round(skill_match_pct * 0.50 + tfidf_score * 0.30 + exp_bonus * 0.20, 2)
-
-    return {
-        "matched_skills":      matched,
-        "missing_skills":      missing,
-        "skill_match_percent": skill_match_pct,
-        "tfidf_similarity":    tfidf_score,
-        "experience_bonus":    exp_bonus,
-        "cv_score":            cv_score,
-    }
+        return {
+            "matched_skills":      matched,
+            "missing_skills":      missing,
+            "skill_match_percent": skill_match_pct,
+            "tfidf_similarity":    tfidf_score,
+            "experience_bonus":    exp_bonus,
+            "cv_score":            cv_score,
+        }
+    except Exception as e:
+        print(f"[skill_matcher] CRITICAL FAILED: {e}")
+        return {
+            "matched_skills":      [],
+            "missing_skills":      required_skills_list,
+            "skill_match_percent": 0.0,
+            "tfidf_similarity":    0.0,
+            "experience_bonus":    0.0,
+            "cv_score":            10.0, # Minimum floor score to prevent 500 but indicate failure
+            "error": str(e)
+        }
 
 
 def is_qualified(cv_score: float, threshold: float = CV_THRESHOLD) -> bool:
