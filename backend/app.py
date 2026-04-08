@@ -37,6 +37,7 @@ def create_app() -> Flask:
         "http://localhost:3000",   # CRA / other
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
+        "https://talentmatch-ai-eta.vercel.app", # Explicitly allow deployment
     ]
     custom_origin = os.getenv("FRONTEND_URL", "").strip()
     if custom_origin:
@@ -48,8 +49,12 @@ def create_app() -> Flask:
             
         allowed_origins.append(custom_origin)
 
-    CORS(app, resources={r"/api/*": {"origins": allowed_origins}},
-         supports_credentials=True)
+    # Simplified CORS for production stability
+    CORS(app, resources={r"/api/*": {
+        "origins": allowed_origins + ["*"] if not os.getenv("FRONTEND_URL") else allowed_origins,
+        "methods": ["GET", "POST", "OPTIONS", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }}, supports_credentials=True)
 
     # --- JWT ---
     JWTManager(app)

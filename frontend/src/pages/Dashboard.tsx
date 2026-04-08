@@ -31,10 +31,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
     const fetchCandidates = async () => {
       try {
         const token = localStorage.getItem('auth_token');
-        const res   = await fetch(`${API_BASE}/api/candidates`, { headers: { Authorization: `Bearer ${token}` } });
+        const res   = await fetch(`${API_BASE}/api/chat/sessions`, { headers: { Authorization: `Bearer ${token}` } });
         const data  = await res.json();
-        if (Array.isArray(data)) setCandidates(data);
-      } catch (e) { console.error('Data sync failed', e); }
+        // The backend returns { candidates: [...], stats: {...} }
+        if (data.candidates && Array.isArray(data.candidates)) {
+          setCandidates(data.candidates);
+        }
+      } catch (e) { 
+        console.error('Data sync failed', e); 
+      }
       finally { setLoading(false); }
     };
     fetchCandidates();
@@ -45,10 +50,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
     setModalLoading(true);
     try {
       const token = localStorage.getItem('auth_token');
-      const res   = await fetch(`${API_BASE}/api/candidates/${candidate.session_id}/transcript`, { headers: { Authorization: `Bearer ${token}` } });
+      // Backend detail endpoint: /api/chat/sessions/<id>
+      const res   = await fetch(`${API_BASE}/api/chat/sessions/${candidate.session_id}`, { headers: { Authorization: `Bearer ${token}` } });
       const data  = await res.json();
       if (data.transcript) setTranscript(data.transcript);
-    } catch (e) { setTranscript([]); }
+    } catch (e) { 
+      console.error('Transcript fetch failed', e);
+      setTranscript([]); 
+    }
     finally { setModalLoading(false); }
   };
 
