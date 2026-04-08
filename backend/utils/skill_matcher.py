@@ -21,8 +21,20 @@ We expose is_qualified(score, threshold=60.0).
 from __future__ import annotations
 import re
 import os
+import tempfile
 from difflib import SequenceMatcher
 from typing import List, Dict
+
+# ---------------------------------------------------------------------------
+# PythonAnywhere fix: /tmp is unavailable in WSGI workers.
+# torch (pulled in by spacy→thinc) crashes on import trying to create a tempdir.
+# Point all temp-dir env vars to the home directory before any heavy import.
+# ---------------------------------------------------------------------------
+_home = os.path.expanduser("~")
+for _tmp_var in ("TMPDIR", "TEMP", "TMP"):
+    if not os.environ.get(_tmp_var):
+        os.environ[_tmp_var] = _home
+tempfile.tempdir = _home  # also patch the Python-level cache
 
 # ---------------------------------------------------------------------------
 # Skill synonym map  — catches common abbreviations / alternative spellings
@@ -95,9 +107,11 @@ def _get_nlp():
             import spacy
             # Attempt to load, but don't crash if missing
             _nlp = spacy.load("en_core_web_sm")
-        except Exception as e:
-            print(f"[skill_matcher] WARNING: spaCy/en_core_web_sm not found. Falling back to basic string matching. (Error: {e})")
-            _nlp = "FAILED" # Sentinel to prevent repeated attempts
+        except (FileNotFoundError, OSError, ImportError, Exception) as e:
+            # FileNotFoundError/OSError: torch/dill can't find /tmp on PythonAnywhere
+            # ImportError: spaCy or model not installed
+            print(f"[skill_matcher] WARNING: spaCy unavailable. Falling back to basic string matching. (Error: {e})")
+            _nlp = "FAILED"  # Sentinel to prevent repeated attempts
     return _nlp if _nlp != "FAILED" else None
 
 
