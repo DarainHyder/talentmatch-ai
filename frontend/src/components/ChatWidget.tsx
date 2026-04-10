@@ -12,7 +12,7 @@ interface ChatWidgetProps {
 const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([
-    { role: 'bot', content: "Neural link established. I am your TalentMatch AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }
+    { role: 'bot', content: "Hello! I am your Smart Hire AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }
   ]);
   const [input, setInput] = useState('');
   const [userName, setUserName] = useState('');
@@ -40,7 +40,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     const formData = new FormData();
     formData.append('cv_file', file);
     formData.append('name', userName || 'Candidate');
-    formData.append('email', userEmail || 'candidate@talentmatch.ai');
+    formData.append('email', userEmail || 'candidate@smarthire.ai');
 
     try {
       const res = await fetch(`${API_BASE}/api/chat/start`, {
@@ -124,16 +124,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
             }`}
           >
             {/* Header */}
-            <div className="px-6 py-5 bg-gradient-to-r from-cyan-500/5 to-transparent flex items-center justify-between border-b border-slate-100">
+            <div className="px-6 py-4 flex items-center justify-between border-b border-white/20" style={{ background: '#26E4E4' }}>
                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white shadow-sm p-1">
+                    <img src="/screenify-bot.svg" alt="Bot" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest italic">TM AI Pilot.</h3>
+                    <h3 className="text-xl font-bold text-white tracking-wide" style={{ fontFamily: 'Manrope, sans-serif' }}>Smart Hire</h3>
                     <div className="flex items-center gap-1.5 mt-0.5">
-                       <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${isUploaded ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                       <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">
+                       <span className={`w-1.5 h-1.5 rounded-full animate-pulse bg-white`} />
+                       <p className="text-[10px] text-white/90 font-medium uppercase tracking-widest">
                          {isUploaded ? 'Linked: Evaluation Mode' : 'Awaiting CV Upload'}
                        </p>
                     </div>
@@ -153,12 +153,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
             >
                {messages.map((m, i) => (
                  <div key={i} className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                    <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-black border transition-all ${
+                    <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-[11px] font-black transition-all ${
                       m.role === 'bot' 
-                        ? 'bg-white text-slate-400 border-slate-100 shadow-sm' 
-                        : 'bg-gradient-to-br from-cyan-500 to-sky-500 text-white border-transparent shadow-lg shadow-cyan-500/20'
+                        ? 'bg-transparent' 
+                        : 'bg-gradient-to-br from-cyan-500 to-sky-500 text-white shadow-lg'
                     }`}>
-                       {m.role === 'bot' ? 'TM' : 'ID'}
+                       {m.role === 'bot' ? (
+                          <img src="/screenify-bot.svg" alt="bot" className="w-full h-full object-contain p-0.5 rounded-full bg-slate-100" />
+                       ) : 'YOU'}
                     </div>
                     <div className={`max-w-[80%] px-5 py-3.5 rounded-2xl text-[14px] leading-relaxed relative ${
                       m.role === 'bot' 

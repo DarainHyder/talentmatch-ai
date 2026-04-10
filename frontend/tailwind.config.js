@@ -7,19 +7,25 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Manrope', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        navy: {
-          900: "#0a0f1e", // Primary BG
-          800: "#0d1526", // Section Alt BG
-          700: "#111827", // Card BG
+        teal: {
+          400: '#26E4E4',
+          500: '#26E4E4',
+          600: '#0bdcdc',
+          700: '#006a6a',
         },
-        accent: {
-          purple: "#7c3aed", // Vibrant Purple
-          "purple-hover": "#8b5cf6",
+        navy: {
+          900: '#0F172A',
+          800: '#1e293b',
+          700: '#334155',
         },
       },
       backgroundImage: {
-        'purple-gradient': 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)',
+        'teal-gradient': 'linear-gradient(135deg, #006a6a 0%, #26E4E4 100%)',
       },
     },
   },

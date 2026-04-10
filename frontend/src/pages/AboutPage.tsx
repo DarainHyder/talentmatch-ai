@@ -1,131 +1,208 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 
 const AboutPage: React.FC = () => {
   return (
-    <div className="bg-slate-50 min-h-screen pt-32 pb-20">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <header className="text-center mb-24">
-          <motion.div
+    <div className="bg-white min-h-screen pt-16" style={{ fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* ─── HEADER SECTION ──────────────────────────────────────────────────────── */}
+      <section className="relative text-center pt-24 pb-20 overflow-hidden" style={{ background: '#f8fdfd' }}>
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #26E4E4 0%, transparent 70%)', filter: 'blur(80px)', transform: 'translate(30%, -30%)' }} />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full opacity-20 pointer-events-none"
+          style={{ background: 'radial-gradient(circle, #26E4E4 0%, transparent 70%)', filter: 'blur(80px)', transform: 'translate(-30%, 30%)' }} />
+
+        <div className="max-w-4xl mx-auto px-6 relative z-10 flex flex-col items-center">
+          <motion.img 
+            src="/about-hero-bot.svg" 
+            alt="AI Bot" 
+            className="h-32 mb-8 object-contain"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+          <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-50 border border-cyan-100 mb-6"
+            className="text-5xl md:text-6xl font-black mb-6 leading-tight"
+            style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}
           >
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600">Cognitive Layer V4</span>
-          </motion.div>
-          <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-8 italic">
-            Agentic <span className="text-glow">Intelligence.</span>
-          </h1>
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
-            TalentMatch AI isn't just a bot—it's a multi-agent orchestration layer that understands professional context at a neural level.
-          </p>
-        </header>
+            Building a Smarter, Fairer<br/>Future of <span style={{ color: '#26E4E4' }}>Hiring</span>
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed font-medium"
+          >
+            Our AI-powered hiring assistant is designed to simplify recruitment, reduce manual workload, and give every candidate a fair chance with transparent, data-driven evaluation.
+          </motion.p>
+        </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
-          {/* Animated SVG Illustration - Human-AI Silhouette (Light Cyan) */}
+      {/* ─── ABOUT OUR PERSONALIZED AI RECRUITER ───────────────────────────────── */}
+      <section className="py-24 bg-white relative">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-black leading-tight mb-6" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              About Our Personalized AI <br />
+              <span style={{ color: '#26E4E4' }}>Recruiter</span>
+            </h2>
+            <p className="text-gray-600 text-lg leading-loose font-medium">
+              We are an AI-driven recruitment assistant built to transform the way companies hire. Our system screens resumes, conducts chat-based interviews, evaluates candidate responses, and generates instant ranked reports—helping teams hire faster and smarter.
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="relative glass-card p-10 bg-white shadow-2xl shadow-cyan-500/10"
+            className="flex justify-center"
           >
-             <div className="absolute -top-10 -left-10 w-40 h-40 bg-cyan-200 blur-[80px] opacity-30" />
-             <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-sky-200 blur-[80px] opacity-30" />
-             
-             <svg viewBox="0 0 100 100" className="w-full h-full relative z-10 filter drop-shadow(0 0 15px rgba(6,182,212,0.1))">
-                {/* Human/AI Silhouette nodes */}
-                <motion.path
-                  d="M50 20 C60 20 70 30 70 45 C70 60 60 75 50 85 C40 75 30 60 30 45 C30 30 40 20 50 20"
-                  fill="none"
-                  stroke="#06b6d4"
-                  strokeWidth="0.5"
-                  initial={{ pathLength: 0 }}
-                  animate={{ pathLength: 1 }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                />
-                
-                {/* Cognitive Nodes */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.circle
-                    key={i}
-                    cx={50 + 20 * Math.cos(i * (Math.PI / 4))}
-                    cy={50 + 30 * Math.sin(i * (Math.PI / 4))}
-                    r="1.5"
-                    fill="#0ea5e9"
-                    animate={{ scale: [1, 1.5, 1], opacity: [0.3, 1, 0.3] }}
-                    transition={{ duration: 2, delay: i * 0.2, repeat: Infinity }}
-                  />
-                ))}
-
-                {/* Internal Synapse paths */}
-                <motion.path
-                  d="M30 45 Q50 50 70 45"
-                  stroke="#06b6d4"
-                  strokeWidth="0.2"
-                  fill="none"
-                  animate={{ opacity: [0.1, 0.5, 0.1] }}
-                  transition={{ duration: 3, repeat: Infinity }}
-                />
-             </svg>
-             
-             {/* Dynamic Status HUD */}
-             <div className="absolute bottom-6 left-6 right-6 flex justify-between items-center bg-slate-50 border border-slate-100 p-4 rounded-3xl backdrop-blur-md">
-                <div className="flex items-center gap-3">
-                   <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Cognitive Sync: 99.8%</span>
-                </div>
-                <div className="w-16 h-1 bg-slate-200 rounded-full overflow-hidden">
-                   <motion.div animate={{ x: [-40, 40] }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }} className="w-10 h-full bg-cyan-500" />
-                </div>
-             </div>
+            <img 
+              src="/about-recruiter-bot.svg" 
+              alt="Personalized AI Recruiter" 
+              className="w-full max-w-md object-contain drop-shadow-2xl"
+            />
           </motion.div>
+        </div>
+      </section>
 
-          {/* Text Content */}
-          <div className="space-y-12">
+      {/* ─── WHY WE BUILT SMART HIRE ───────────────────────────────────────────── */}
+      <section className="py-24" style={{ background: '#f8fafc' }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-black mb-4" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              Why We Built Smart Hire
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { id: "01", title: "Neural Logic Match", desc: "Our AI goes beyond keywords, analyzing project relevance through deep semantic understanding." },
-              { id: "02", title: "Dynamic Adaptive Chat", desc: "Interviews that evolve based on the candidate's technical depth, ensuring high-fidelity signal." },
-              { id: "03", title: "Global Intelligence", desc: "Access the best talent pool with cross-region skill assessment and cultural alignment chips." }
-            ].map((item, i) => (
+              {
+                title: 'Slow Manual Screening',
+                desc: 'Recruiters often spend hours sorting through large stacks of resumes, making the first stage of hiring slow and inefficient.',
+                img: '/problem-1.png'
+              },
+              {
+                title: 'HR Overload',
+                desc: 'HR teams juggle multiple roles—shortlisting candidates, scheduling interviews. This workload leads to delays and burnout.',
+                img: '/problem-2.png'
+              },
+              {
+                title: 'Bias & Inconsistency',
+                desc: 'Human evaluations can be influenced by unconscious bias. Even experienced recruiters may unintentionally favor certain profiles.',
+                img: '/problem-3.png'
+              },
+              {
+                title: 'Stress for Candidates',
+                desc: 'Traditional interviews can make candidates nervous, affecting performance and preventing them from showcasing their true skills.',
+                img: '/problem-4.png'
+              }
+            ].map((item, idx) => (
               <motion.div 
-                key={i}
-                initial={{ x: 40, opacity: 0 }}
-                whileInView={{ x: 0, opacity: 1 }}
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="group"
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white rounded-3xl p-8 hover:-translate-y-2 transition-transform duration-300 shadow-sm border border-gray-100 flex flex-col items-center text-center"
               >
-                <div className="flex items-center gap-4 mb-4">
-                  <span className="text-3xl font-black text-slate-200 group-hover:text-cyan-500 transition-colors uppercase italic">{item.id}</span>
-                  <div className="h-[1px] flex-1 bg-slate-200 group-hover:bg-cyan-200 transition-all" />
+                <div className="w-32 h-32 mb-6 flex items-center justify-center bg-teal-50 rounded-full">
+                  <img src={item.img} alt={item.title} className="w-20 object-contain" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight">{item.title}</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">{item.desc}</p>
+                <h3 className="text-xl font-bold mb-4" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                  {item.title}
+                </h3>
+                <p className="text-gray-500 text-sm leading-relaxed">
+                  {item.desc}
+                </p>
               </motion.div>
             ))}
-            
-            <Link to="/chatbot" className="btn-primary inline-flex mt-8 shadow-xl">
-              Launch Agentic Core
-            </Link>
           </div>
         </div>
+      </section>
 
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 pt-20 border-t border-slate-200">
-           {[
-             { label: "Accuracy", val: "99%" },
-             { label: "Candidates", val: "12k+" },
-             { label: "Response", val: "0.2s" },
-             { label: "Accuracy", val: "99%" }
-           ].map((s, i) => (
-             <div key={i} className="text-center">
-                <p className="text-4xl font-black text-slate-800 mb-2 italic">{s.val}</p>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{s.label}</p>
-             </div>
-           ))}
+      {/* ─── TECHNOLOGY BEHIND SMART HIRE ──────────────────────────────────────── */}
+      <section className="py-24 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-black mb-8" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              Technology Behind the Smart Hire
+            </h2>
+            <p className="text-gray-600 text-lg max-w-4xl mx-auto leading-loose mb-20 font-medium">
+              Our platform uses multiple AI layers—machine learning, natural language processing, and data-driven scoring—to evaluate candidates with accuracy. It reads resumes, understands responses in chat interviews, identifies key skills, and measures performance against role requirements.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { title: 'Resume Parsing', icon: '/about-tech-1.svg' },
+              { title: 'AI Chat Interviews', icon: '/about-tech-2.svg' },
+              { title: 'Response Evaluation', icon: '/about-tech-3.svg' },
+              { title: 'Candidate Ranking', icon: '/about-tech-4.svg' }
+            ].map((tech, idx) => (
+              <motion.div 
+                key={idx}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="flex flex-col items-center group cursor-pointer"
+              >
+                <div className="w-28 h-28 mb-6 rounded-3xl bg-white flex items-center justify-center transition-all duration-300 group-hover:scale-110 shadow-[0_10px_40px_rgba(38,228,228,0.15)] opacity-90 border-[0.5px] border-cyan-100">
+                  <img src={tech.icon} alt={tech.title} className="w-12 h-12" />
+                </div>
+                <h4 className="text-lg font-bold" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                  {tech.title}
+                </h4>
+              </motion.div>
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* ─── HIRE SMARTER. FASTER. FAIRER. ─────────────────────────────────────── */}
+      <section className="py-24 relative overflow-hidden" style={{ background: '#f0fafa' }}>
+        <img 
+          src="/about-circuit-lines.png" 
+          alt="Circuit Background" 
+          className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none" 
+        />
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-black mb-8 leading-tight" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              Hire Smarter. Faster. <span style={{ color: '#26E4E4' }}>Fairer.</span>
+            </h2>
+            <p className="text-gray-600 text-lg leading-loose mb-10 font-medium">
+              Experience how AI can transform the way you screen, interview, and evaluate candidates. Let your team focus on decisions—while our assistant handles the rest.
+            </p>
+            <button 
+              className="px-10 py-4 text-white font-bold rounded-2xl transition-transform hover:scale-105 active:scale-95 shadow-[0_4px_20px_rgba(38,228,228,0.35)]"
+              style={{ background: 'linear-gradient(135deg, #006a6a 0%, #26E4E4 100%)' }}
+            >
+              Get Started Free
+            </button>
+          </motion.div>
+        </div>
+        <img 
+          src="/footer-wave.svg" 
+          alt="" 
+          className="absolute bottom-0 left-0 w-full object-cover h-16 pointer-events-none" 
+        />
+      </section>
+
     </div>
   );
 };

@@ -4,80 +4,201 @@ import ChatWidget from '../components/ChatWidget';
 
 const ChatbotPage: React.FC = () => {
   return (
-    <div className="bg-slate-50 min-h-screen pt-32 pb-20 overflow-hidden relative">
-      {/* Ambient Background Glows - Light Cyan */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-cyan-100/50 blur-[150px] -z-10 rounded-full" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-100/50 blur-[150px] -z-10 rounded-full" />
+    <div className="bg-white min-h-screen pt-16" style={{ fontFamily: 'Inter, sans-serif' }}>
+      
+      {/* ─── HERO SECTION ──────────────────────────────────────────────────────── */}
+      <section className="relative pt-24 pb-16 overflow-hidden bg-white">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center text-left">
+          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+            <h1 className="text-5xl md:text-6xl font-black leading-tight mb-6" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              Your Smart Chat<br/>
+              <span style={{ color: '#26E4E4' }}>Interview</span> Starts Here
+            </h1>
+            <p className="text-lg text-gray-600 mb-10 max-w-lg leading-relaxed font-medium">
+              A modern AI-driven chat interview experience that screens candidates, evaluates responses, and delivers instant insights — all in a friendly conversation format.
+            </p>
+            <a 
+              href="#demo-sec"
+              className="inline-flex items-center justify-center px-10 py-4 text-white font-bold text-lg rounded-2xl transition-all shadow-[0_4px_20px_rgba(38,228,228,0.35)] hover:scale-105"
+              style={{ background: '#26E4E4' }}
+            >
+              Try Demo
+            </a>
+          </motion.div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10 text-center mb-20">
-        <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 mb-6 shadow-sm">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Neural Network Active</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black text-slate-900 tracking-tighter mb-8 italic">
-            Experience <span className="text-glow">Agentic AI.</span>
-          </h1>
-          <p className="text-xl text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
-            Begin your journey with the world's most advanced behavioral screening core. Interact naturally with our AI intelligence.
-          </p>
-        </motion.div>
-      </div>
+          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }} className="flex justify-center lg:justify-end">
+            <img src="/chatbot-hero-bot-transparent.png" alt="Smart Chat Interview" className="w-full max-w-[500px] object-contain drop-shadow-2xl" />
+          </motion.div>
+        </div>
+      </section>
 
-      <div className="max-w-5xl mx-auto px-6 relative">
-        {/* Dynamic Waveform Visualizer - Cyan/Sky */}
-        <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-full max-w-2xl h-32 opacity-20 pointer-events-none overflow-hidden">
-          <div className="flex items-center justify-center gap-1 h-full">
-            {[...Array(40)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ height: 10 }}
-                animate={{ 
-                  height: [10, 40 + Math.random() * 40, 10],
-                  backgroundColor: ['#06b6d4', '#0ea5e9', '#06b6d4']
-                }}
-                transition={{ 
-                  duration: 1 + Math.random(), 
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                className="w-1 rounded-full bg-cyan-500"
-              />
+      {/* ─── HOW IT WORKS ──────────────────────────────────────────────────────── */}
+      <section className="py-24" style={{ background: '#f8fdfd' }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <h2 className="text-4xl md:text-5xl font-black mb-20" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+              How It Works — Interactive<br/>
+              <span style={{ color: '#26E4E4' }}>Process</span> Flow
+            </h2>
+          </motion.div>
+
+          <div className="flex flex-col md:flex-row items-start justify-center gap-4 relative">
+            {/* Steps Configuration */}
+            {[
+              {
+                num: '01',
+                title: 'Upload Resume',
+                desc: 'The assistant instantly scans the resume, extracts skills, education, experience, and matches them to the job role.',
+                icon: '/process-01.png'
+              },
+              {
+                num: '02',
+                title: 'AI Interview',
+                desc: 'Candidates answer adaptive AI-generated questions that feel natural, supportive, and fully stress-free.',
+                icon: '/process-02.png'
+              },
+              {
+                num: '03',
+                title: 'Evaluation',
+                desc: 'The system analyzes clarity, relevance, communication skill, and technical accuracy in real time.',
+                icon: '/process-03.png'
+              },
+              {
+                num: '04',
+                title: 'Scoring',
+                desc: 'A structured report is generated with skill scores, performance graphs, and recommended ranking.',
+                icon: '/process-04.png'
+              }
+            ].map((step, idx) => (
+              <React.Fragment key={idx}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }} 
+                  whileInView={{ opacity: 1, y: 0 }} 
+                  viewport={{ once: true }} 
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex-1 flex flex-col items-center text-center px-4"
+                >
+                  <div className="w-20 h-20 bg-[#26E4E4] rounded-full flex items-center justify-center mb-6 text-white text-2xl font-black shadow-lg shadow-cyan-200" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                    {step.num}
+                  </div>
+                  <h3 className="text-xl font-black mb-3" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                    {step.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 leading-relaxed max-w-[200px]">
+                    {step.desc}
+                  </p>
+                </motion.div>
+
+                {/* Arrow Divider (Hide on last element and on mobile) */}
+                {idx < 3 && (
+                  <div className="hidden md:flex flex-shrink-0 pt-6">
+                    <img src="/process-arrow.png" alt="→" className="w-16 object-contain" />
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>
+      </section>
 
-        <ChatWidget inline={true} />
+      {/* ─── ACTUAL CHATBOX DEMO (A CHAT INTERVIEW THAT FEELS NATURAL) ─────────── */}
+      <section id="demo-sec" className="py-24 bg-white scroll-mt-20">
+         <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <h2 className="text-4xl md:text-5xl font-black mb-6 leading-tight" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                A <span style={{ color: '#26E4E4' }}>Chat Interview</span> That Feels<br/>Natural, Not Robotic
+              </h2>
+              <p className="text-gray-600 text-lg leading-relaxed mb-20 max-w-3xl mx-auto font-medium">
+                Our AI interviewer feels truly human — friendly, adaptive, and professional, giving every candidate a fair chance to present their strengths with confidence.
+              </p>
+            </motion.div>
 
-        {/* Cinematic Underlay for Chat */}
-        <div className="mt-12 text-center text-slate-400 font-bold uppercase tracking-[0.2em] text-[10px] opacity-50">
-           Secure Encrypted Node Transmission. Verified by TalentMatch Core™
-        </div>
-        
-        {/* HUD Decorations */}
-        <div className="hidden lg:block absolute -right-20 top-1/2 -translate-y-1/2 space-y-4">
-           {[
-             { label: "Sync", val: "Active" },
-             { label: "Latency", val: "14ms" },
-             { label: "Node", val: "tm-24" }
-           ].map((item, i) => (
-             <motion.div 
-               key={i}
-               initial={{ x: 20, opacity: 0 }}
-               animate={{ x: 0, opacity: 1 }}
-               transition={{ delay: 1 + i * 0.1 }}
-               className="p-4 bg-white border border-slate-200 rounded-2xl shadow-sm backdrop-blur-md"
-             >
-                <div className="text-[8px] font-black text-slate-400 uppercase tracking-widest">{item.label}</div>
-                <div className="text-xs font-black text-cyan-500 italic mt-1">{item.val}</div>
-             </motion.div>
-           ))}
-        </div>
-      </div>
+            {/* Live Chat Widget UI wrapped securely */}
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }} 
+               whileInView={{ opacity: 1, scale: 1 }} 
+               viewport={{ once: true }}
+               transition={{ duration: 0.5 }}
+               className="relative mx-auto max-w-2xl"
+            >
+               {/* Cute floating bot image from reference site */}
+               <img src="/chat-box-bot.png" alt="Smart Hire Bot" className="absolute -top-[70px] left-[45%] -translate-x-[45%] w-32 z-20 drop-shadow-lg" />
+               
+               <div className="relative z-10 pt-[55px] rounded-[32px] overflow-hidden shadow-[0_30px_100px_-20px_rgba(38,228,228,0.25)] bg-[#26E4E4]">
+                  {/* Inline functional ChatWidget fills the box seamlessly */}
+                  <div className="-mt-[55px]">
+                     <ChatWidget inline={true} />
+                  </div>
+               </div>
+            </motion.div>
+         </div>
+      </section>
+
+      {/* ─── WHY CANDIDATES LOVE SMART HIRE? ───────────────────────────────────── */}
+      <section className="py-24" style={{ background: '#f8fdfd' }}>
+         <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <h2 className="text-4xl md:text-5xl font-black mb-6" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                Why Candidates Love <span style={{ color: '#26E4E4' }}>Smart Hire?</span>
+              </h2>
+              <p className="text-gray-600 text-lg leading-relaxed mb-16 max-w-3xl mx-auto font-medium">
+                Smart Hire makes interviews easy, flexible, and stress-free. Candidates enjoy a natural chat experience and receive helpful insights that clearly highlight their strengths and readiness for the next step.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              {[
+                { img: '/cand-one.svg', text: 'No Pressure, No Scheduling' },
+                { img: '/cand-two.svg', text: 'Clear, Friendly Questions' },
+                { img: '/cand-three.svg', text: 'Instant Evaluation and Insights' },
+                { img: '/cand-four.svg', text: 'Fair for Everyone' }
+              ].map((card, idx) => (
+                <motion.div 
+                  key={idx}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(15,23,42,0.05)] hover:-translate-y-2 transition-transform duration-300 flex flex-col items-center justify-center border-[0.5px] border-slate-100"
+                >
+                  <img src={card.img} alt={card.text} className="w-16 h-16 mb-4 object-contain" />
+                  <h4 className="text-[17px] font-black text-[#0F172A]" style={{ fontFamily: 'Manrope, sans-serif' }}>
+                    {card.text}
+                  </h4>
+                </motion.div>
+              ))}
+            </div>
+         </div>
+      </section>
+
+      {/* ─── WHAT MAKES OUR AI CHATBOT DIFFERENT? ──────────────────────────────── */}
+      <section className="py-24 bg-white relative overflow-hidden">
+         <div className="max-w-7xl mx-auto px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+              <h2 className="text-4xl md:text-5xl font-black mb-10 leading-tight" style={{ fontFamily: 'Manrope, sans-serif', color: '#0F172A' }}>
+                What Makes Our AI<br/>Chatbot <span style={{ color: '#26E4E4' }}>Different?</span>
+              </h2>
+              <ul className="space-y-6">
+                {[
+                  'Adaptive questioning (follows your responses).',
+                  'Understands skills from both resume + answers.',
+                  'Human-like conversational tone',
+                  'Instant scoring and feedback',
+                  'Consistent, unbiased evaluations'
+                ].map((item, idx) => (
+                  <li key={idx} className="flex items-start gap-4">
+                    <img src="/check-circle.svg" alt="Check" className="w-6 h-6 shrink-0 mt-0.5" />
+                    <span className="text-xl text-gray-700 font-medium">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} className="flex justify-center lg:justify-end">
+               <img src="/chatbot-footer-bot-transparent.png" alt="Different Bot" className="w-full max-w-[450px] object-contain drop-shadow-2xl" />
+            </motion.div>
+         </div>
+      </section>
+
     </div>
   );
 };

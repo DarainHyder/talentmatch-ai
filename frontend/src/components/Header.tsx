@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 
 interface HeaderProps {
   user: any;
@@ -11,6 +10,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -25,72 +25,95 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
     { name: 'Dashboard', path: '/dashboard' },
   ];
 
-  // Nuclear Stability: Components NEVER unmount. We use CSS and motion to hide.
+  if (hidden) return null;
+
   return (
-    <motion.header 
-      initial={false}
-      animate={{ 
-        y: hidden ? -130 : 0,
-        opacity: hidden ? 0 : 1,
-        pointerEvents: hidden ? 'none' : 'auto'
-      }}
-      className={`fixed top-0 left-0 right-0 z-50 px-6 py-6 transition-all duration-500`}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        isScrolled ? 'bg-white shadow-md' : 'bg-white/95'
+      }`}
     >
-      <div className={`max-w-7xl mx-auto glass-card px-8 h-20 flex items-center justify-between border-slate-100 shadow-[0_20px_50px_-20px_rgba(6,182,212,0.15)] transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-2xl' : 'bg-white/40'}`}>
+      <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center group pointer-events-auto">
-          <div className="w-11 h-11 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[14px] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <div className="ml-4">
-            <span className="text-xl font-black text-slate-900 tracking-tighter italic">TalentMatch<span className="text-cyan-500">.</span></span>
-          </div>
+        <Link to="/" className="flex items-center group">
+          <img src="/sh-logo.png" alt="Smart Hire" className="h-16 object-contain" />
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-10 pointer-events-auto">
+        <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:text-cyan-600 relative group ${
-                location.pathname === link.path ? 'text-cyan-600' : 'text-slate-400'
-              }`}
+              className="text-base font-bold transition-colors shadow-sm-hover"
+              style={{
+                color: location.pathname === link.path ? '#26E4E4' : '#374151',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = '#26E4E4')}
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.color =
+                  location.pathname === link.path ? '#26E4E4' : '#374151')
+              }
             >
               {link.name}
-              <motion.span 
-                initial={false}
-                animate={{ width: location.pathname === link.path ? '100%' : '0%' }}
-                className="absolute -bottom-2 left-0 h-0.5 bg-cyan-500" 
-              />
-              <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-cyan-500 group-hover:w-full transition-all duration-300" />
             </Link>
           ))}
-          
-          <div className="h-6 w-[1px] bg-slate-200 mx-2" />
+        </nav>
 
+        {/* CTA */}
+        <div className="hidden md:flex items-center gap-6">
           {!user ? (
-            <Link to="/login" className="btn-primary scale-90 !py-3">
+            <Link to="/login" className="btn-primary text-base px-6 py-3 font-semibold">
               Admin Login
             </Link>
           ) : (
-            <button 
+            <button
               onClick={logout}
-              className="text-[11px] font-black uppercase tracking-[0.2em] text-red-500 hover:text-red-600 transition-colors"
+              className="text-base font-bold text-red-500 hover:text-red-600 transition-colors"
             >
               Sign Out
             </button>
           )}
-        </nav>
+          <Link to="/chatbot" className="btn-primary text-base px-6 py-3 font-semibold">
+            Try Demo
+          </Link>
+        </div>
 
-        {/* Mobile menu button */}
-        <Link to="/chatbot" className="md:hidden btn-primary scale-75 pointer-events-auto">
-          Demo
-        </Link>
+        {/* Mobile hamburger */}
+        <button
+          className="md:hidden p-2 rounded-lg"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {mobileOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
-    </motion.header>
+
+      {/* Mobile Menu */}
+      {mobileOpen && (
+        <div className="md:hidden bg-white border-t border-gray-100 px-6 py-4 flex flex-col gap-4">
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              onClick={() => setMobileOpen(false)}
+              className="text-sm font-semibold text-gray-700 hover:text-teal-500 transition-colors"
+            >
+              {link.name}
+            </Link>
+          ))}
+          <Link to="/chatbot" onClick={() => setMobileOpen(false)} className="btn-primary text-sm px-5 py-2.5 w-full justify-center">
+            Try Demo
+          </Link>
+        </div>
+      )}
+    </header>
   );
 };
 

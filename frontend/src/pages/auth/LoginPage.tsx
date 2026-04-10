@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 tracking-tight italic">TalentMatch <span className="text-cyan-500">Portal.</span></h2>
+          <h2 className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: 'Manrope, sans-serif' }}>Smart<span style={{ color: '#26E4E4' }}>Hire</span> <span className="text-slate-500">Portal</span></h2>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[9px] mt-2 opacity-70">Admin & Recruiter Access</p>
         </div>
 
@@ -79,7 +79,7 @@ const LoginPage: React.FC = () => {
               <label className="block text-[10px] uppercase font-black tracking-widest text-slate-400 mb-2 ml-1">Email Address</label>
               <input 
                 type="email" 
-                placeholder="admin@talentmatch.ai"
+                placeholder="admin@smarthire.ai"
                 required
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-800 placeholder:text-slate-400 focus:border-cyan-500/50 focus:bg-white outline-none transition-all"
                 value={email}
@@ -110,7 +110,7 @@ const LoginPage: React.FC = () => {
         </div>
 
         <p className="text-center mt-8 text-sm font-bold text-slate-400 uppercase tracking-widest text-[10px]">
-          Identity Verified by <Link to="/chatbot" className="text-cyan-500 hover:text-cyan-600 transition-colors">TalentMatch Core™</Link>
+          Identity Verified by <Link to="/chatbot" className="hover:text-teal-400 transition-colors" style={{ color: '#26E4E4' }}>Smart Hire™</Link>
         </p>
       </motion.div>
     </div>
