@@ -41,7 +41,7 @@ def get_db() -> sqlite3.Connection:
     if not hasattr(_local, "conn") or _local.conn is None:
         _local.conn = sqlite3.connect(_DB_PATH, check_same_thread=False)
         _local.conn.row_factory = sqlite3.Row   # rows behave like dicts
-        _local.conn.execute("PRAGMA journal_mode=WAL")   # better concurrency
+        # PRAGMA journal_mode=WAL removed because PythonAnywhere NFS doesn't support WAL shared memory
         _local.conn.execute("PRAGMA foreign_keys=ON")
     return _local.conn
 
