@@ -31,13 +31,14 @@ def create_app() -> Flask:
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = False            # tokens don't expire in dev
 
     # --- CORS ---
-    # Allow React dev server and production origin
+    # Allow React dev server and production origins
     allowed_origins = [
         "http://localhost:5173",   # Vite dev server
         "http://localhost:3000",   # CRA / other
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "https://talentmatch-ai-eta.vercel.app", # Explicitly allow deployment
+        "https://talentmatch-ai-eta.vercel.app",       # Vercel production
+        "https://darainhyder-talentmatch-backend.hf.space",  # HuggingFace Space
     ]
     custom_origin = os.getenv("FRONTEND_URL", "").strip()
     if custom_origin:
@@ -102,11 +103,13 @@ def create_app() -> Flask:
 app = create_app()
 
 if __name__ == "__main__":
+    port = int(os.getenv("PORT", 5000))   # HF Spaces uses 7860, local uses 5000
     print("🚀 TalentMatch AI backend starting...")
     print(f"   GEMINI_API_KEY: {'SET ✅' if os.getenv('GEMINI_API_KEY') else 'NOT SET ⚠️ (using default questions)'}")
+    print(f"   PORT: {port}")
     app.run(
         host="0.0.0.0",
-        port=5000,
-        debug=True,
-        threaded=True,   # handle concurrent users safely
+        port=port,
+        debug=False,      # Never debug=True in production
+        threaded=True,    # handle concurrent users safely
     )
