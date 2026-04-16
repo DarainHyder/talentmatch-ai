@@ -37,8 +37,10 @@ def create_app() -> Flask:
         "http://localhost:3000",   # CRA / other
         "http://127.0.0.1:5173",
         "http://127.0.0.1:3000",
-        "https://talentmatch-ai-eta.vercel.app",       # Vercel production
-        "https://darainhyder-talentmatch-backend.hf.space",  # HuggingFace Space
+        "https://talentmatch-ai-eta.vercel.app",   # Vercel production
+        # ↑ Add more frontend origins here if needed.
+        # The HF Space URL is the BACKEND — it should NOT be listed here.
+        # Set FRONTEND_URL env var in HF Secrets if your Vercel URL changes.
     ]
     custom_origin = os.getenv("FRONTEND_URL", "").strip()
     if custom_origin:
