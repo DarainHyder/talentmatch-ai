@@ -46,3 +46,19 @@ data/
 chroma_data/
 *.db
 *.sqlite3
+
+# ── ML Model & Training Artifacts ─────────────────────────────────────────────
+# best_model.pt is 367MB — too large for GitHub (100MB limit)
+# Upload manually to PythonAnywhere via file manager
+scripts/model_training/model_output/
+scripts/model_training/results/
+scripts/model_training/__pycache__/
+
+# Dataset (large CSV files — not needed in git)
+dataset/
+
+# Test PDFs uploaded during development
+dummy.pdf
+dummy_123.pdf
+test_pass.pdf
+test_resume.pdf

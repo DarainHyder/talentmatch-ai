@@ -26,6 +26,20 @@ from difflib import SequenceMatcher
 from typing import List, Dict
 
 # ---------------------------------------------------------------------------
+# DeBERTa NER — lazy import, fails silently if model not loaded yet
+# ---------------------------------------------------------------------------
+try:
+    from backend.utils.skill_matcher_deberta import extract_skills as _deberta_extract
+    _DEBERTA_OK = True
+except ImportError:
+    try:
+        from utils.skill_matcher_deberta import extract_skills as _deberta_extract
+        _DEBERTA_OK = True
+    except ImportError:
+        _deberta_extract = None
+        _DEBERTA_OK = False
+
+# ---------------------------------------------------------------------------
 # PythonAnywhere fix: /tmp is unavailable in WSGI workers.
 # torch (pulled in by spacy→thinc) crashes on import trying to create a tempdir.
 # Point all temp-dir env vars to the home directory before any heavy import.
@@ -292,6 +306,22 @@ def match_skills(
         cv_text_lower = cv_text.lower()
         cv_clean = cv_text[:3000].replace('\n', ' ')
         
+        # ── DeBERTa skill pre-extraction ──────────────────────────────────
+        # Run NER model first to get structured skill list.
+        # This enriches the Gemini prompt with high-recall extracted skills
+        # (NER Recall=0.88 means it finds almost all real skills in the CV).
+        deberta_skills: List[str] = []
+        if _DEBERTA_OK and _deberta_extract:
+            try:
+                deberta_skills = _deberta_extract(cv_text) or []
+            except Exception as _e:
+                print(f"[skill_matcher] DeBERTa extraction warning: {_e}")
+
+        deberta_context = ""
+        if deberta_skills:
+            top_skills = ", ".join(deberta_skills[:30])  # top 30 to stay within prompt
+            deberta_context = f"\nNER-extracted skills from CV: {top_skills}"
+
         # --- GEMINI SEMANTIC EXTRACTION ---
         api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
         api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
@@ -302,7 +332,7 @@ Evaluate the candidate's CV strictly against the Job Description and the Require
 
 Job Description: {job_description_text}
 Required Skills: {', '.join(required_skills_list)}
-CV Text: {cv_clean}
+CV Text: {cv_clean}{deberta_context}
 
 Analyze the capability of the candidate. Rate them 0-100. Be semantically intelligent and recognize synonyms.
 Return ONLY valid JSON format exactly matching the schema below:
@@ -349,7 +379,32 @@ Return ONLY valid JSON format exactly matching the schema below:
                         continue
                     break # Fallback to heuristic
                     
-        # --- FALLBACK: HEURISTIC MATCHING ---
+        # --- FALLBACK: DEBERTA + HEURISTIC MATCHING ---
+        # DeBERTa-first: use NER-extracted skills for matching
+        # if DeBERTa is available and found skills, use them directly
+        if deberta_skills:
+            req_lower = [s.strip().lower() for s in required_skills_list if s.strip()]
+            matched_d = [s for s in deberta_skills
+                         if any(r in s or s in r for r in req_lower)]
+            missing_d = [r for r in req_lower
+                         if not any(r in s or s in r for s in deberta_skills)]
+            match_pct_d = round((len(matched_d) / len(req_lower) * 100), 2) if req_lower else 0.0
+            jd_for_tf   = job_description_text.strip() or " ".join(required_skills_list)
+            tfidf_score = round(_tfidf_similarity(cv_text, jd_for_tf) * 100, 2)
+            exp_bonus   = round(_experience_years(cv_text), 2)
+            cv_score    = round(match_pct_d * 0.50 + tfidf_score * 0.30 + exp_bonus * 0.20, 2)
+            return {
+                "matched_skills":      matched_d,
+                "missing_skills":      missing_d,
+                "extracted_skills":    deberta_skills,
+                "skill_match_percent": match_pct_d,
+                "tfidf_similarity":    tfidf_score,
+                "experience_bonus":    exp_bonus,
+                "cv_score":            cv_score,
+                "method":              "deberta-fallback",
+            }
+
+        # --- FINAL FALLBACK: HEURISTIC MATCHING ---
         cv_lemmas = _lemmatize_text(cv_text)
         matched:     List[str]   = []
         missing:     List[str]   = []
