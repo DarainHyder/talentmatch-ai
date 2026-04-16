@@ -1,0 +1,13 @@
+# ML dependencies for DeBERTa NER inference
+# Install ONLY on machines where you want DeBERTa skill extraction enabled.
+# The core app works without these (falls back to Gemini).
+#
+# CPU-only torch (200MB vs 700MB GPU version):
+#   pip install -r requirements-ml.txt --index-url https://download.pytorch.org/whl/cpu
+#
+# After installing, also upload model_output/ folder to:
+#   scripts/model_training/model_output/
+
+torch
+transformers
+numpy

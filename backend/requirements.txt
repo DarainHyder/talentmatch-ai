@@ -10,6 +10,3 @@ scikit-learn
 redis
 uuid
 gunicorn
-torch
-transformers
-numpy
