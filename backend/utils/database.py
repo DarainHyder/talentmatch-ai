@@ -76,7 +76,25 @@ def init_db() -> None:
             summary         TEXT,
             created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        
+        -- Safely attempt to add new columns if they do not exist
+        BEGIN TRANSACTION;
+        """)
+    try:
+        conn.execute("ALTER TABLE candidates ADD COLUMN phone TEXT;")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE candidates ADD COLUMN cv_email TEXT;")
+    except sqlite3.OperationalError:
+        pass
+    try:
+        conn.execute("ALTER TABLE candidates ADD COLUMN extracted_skills TEXT;")
+    except sqlite3.OperationalError:
+        pass
+    conn.commit()
 
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS transcripts (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             session_id  TEXT NOT NULL,
@@ -131,6 +149,9 @@ def insert_candidate(
     matched_skills,          # list or comma-string
     missing_skills,          # list or comma-string
     cv_score: float,
+    phone: str = "",
+    cv_email: str = "",
+    extracted_skills = None, # list or comma-string
 ) -> None:
     """
     INSERT a new candidate row with status = 'interviewing'.
@@ -146,8 +167,8 @@ def insert_candidate(
         """
         INSERT OR REPLACE INTO candidates
             (session_id, name, email, cv_text,
-             matched_skills, missing_skills, cv_score, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'interviewing')
+             matched_skills, missing_skills, cv_score, status, phone, cv_email, extracted_skills)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'interviewing', ?, ?, ?)
         """,
         (
             session_id,
@@ -157,6 +178,9 @@ def insert_candidate(
             _to_str(matched_skills),
             _to_str(missing_skills),
             float(cv_score),
+            phone,
+            cv_email,
+            _to_str(extracted_skills)
         ),
     )
     conn.commit()

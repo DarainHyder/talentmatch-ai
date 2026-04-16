@@ -16,6 +16,9 @@ interface Candidate {
   final_score: number;
   status: string;
   summary?: string;
+  phone?: string;
+  cv_email?: string;
+  extracted_skills?: string;
 }
 
 interface TranscriptModalProps {
@@ -91,6 +94,38 @@ const TranscriptModal: React.FC<TranscriptModalProps> = ({ candidate, transcript
                </div>
             </div>
           )}
+
+          {/* Parsed Contact & Skills Intel */}
+          <div className="px-8 py-5 border-b border-slate-100 bg-white">
+             <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                <div className="flex gap-6">
+                   {candidate.phone && (
+                     <div>
+                       <p className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-1">Parsed Phone</p>
+                       <p className="text-xs font-bold text-slate-700">{candidate.phone}</p>
+                     </div>
+                   )}
+                   {candidate.cv_email && candidate.cv_email !== candidate.email && (
+                     <div>
+                       <p className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-1">Parsed Email</p>
+                       <p className="text-xs font-bold text-slate-700">{candidate.cv_email}</p>
+                     </div>
+                   )}
+                </div>
+                {candidate.extracted_skills && (
+                  <div className="flex-1 max-w-sm">
+                     <p className="text-[9px] uppercase font-black tracking-widest text-slate-400 mb-2">Parsed Skills</p>
+                     <div className="flex flex-wrap gap-1.5">
+                       {candidate.extracted_skills.split(',').map((skill, idx) => (
+                         <span key={idx} className="px-2 py-0.5 bg-slate-50 border border-slate-100 rounded text-[10px] font-bold text-slate-600">
+                           {skill.trim()}
+                         </span>
+                       ))}
+                     </div>
+                  </div>
+                )}
+             </div>
+          </div>
 
           {/* Transcript List - Light/Cyan Theme */}
           <div className="flex-1 overflow-y-auto px-8 py-8 space-y-6 bg-gradient-to-b from-white to-slate-50/20">

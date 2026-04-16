@@ -309,7 +309,8 @@ Return ONLY valid JSON format exactly matching the schema below:
 {{
     "cv_score": 85.0,
     "matched_skills": ["skill1", "skill2"],
-    "missing_skills": ["skill3"]
+    "missing_skills": ["skill3"],
+    "all_extracted_skills": ["skill1", "skill2", "skill4"]
 }}"""
 
             for attempt, key in enumerate(api_keys):
@@ -338,6 +339,7 @@ Return ONLY valid JSON format exactly matching the schema below:
                     return {
                         "matched_skills": data.get("matched_skills", []),
                         "missing_skills": data.get("missing_skills", []),
+                        "extracted_skills": data.get("all_extracted_skills", []),
                         "cv_score": final_score,
                         "method": "gemini-ai"
                     }
@@ -379,6 +381,7 @@ Return ONLY valid JSON format exactly matching the schema below:
         return {
             "matched_skills":      matched,
             "missing_skills":      missing,
+            "extracted_skills":    matched, # Fallback to matched
             "skill_match_percent": skill_match_pct,
             "tfidf_similarity":    tfidf_score,
             "experience_bonus":    exp_bonus,
@@ -389,6 +392,7 @@ Return ONLY valid JSON format exactly matching the schema below:
         return {
             "matched_skills":      [],
             "missing_skills":      required_skills_list,
+            "extracted_skills":    [],
             "skill_match_percent": 0.0,
             "tfidf_similarity":    0.0,
             "experience_bonus":    0.0,

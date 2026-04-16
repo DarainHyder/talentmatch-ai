@@ -10,6 +10,7 @@ Routes:
 
 import os
 import uuid
+import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 
@@ -88,6 +89,13 @@ def chat_start():
         if not cv_text.strip():
             return jsonify({"error": "CV appears to be empty or unreadable."}), 422
 
+        # --- Extract Phone and Email from CV via Regex ---
+        phone_match = re.search(r'\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b', cv_text)
+        cv_phone = phone_match.group(0) if phone_match else ""
+        
+        email_match = re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', cv_text)
+        cv_email = email_match.group(0) if email_match else ""
+
         # --- Load current Job Description ---
         job = get_jd()
         if not job:
@@ -112,6 +120,7 @@ def chat_start():
         cv_score         = match_result.get("cv_score", 0.0)
         matched_skills   = match_result.get("matched_skills", [])
         missing_skills   = match_result.get("missing_skills", [])
+        extracted_skills = match_result.get("extracted_skills", [])
 
         # --- Count every CV received ---
         try:
@@ -163,6 +172,9 @@ def chat_start():
                 matched_skills=matched_skills,
                 cv_score=cv_score,
                 question_list=question_list,
+                phone=cv_phone,
+                cv_email=cv_email,
+                extracted_skills=extracted_skills,
             )
         except Exception as e:
             print(f"[chat] create_session failed: {e}")

@@ -160,6 +160,9 @@ def create_session(
     matched_skills,   # list or comma-string
     cv_score: float,
     question_list: list,
+    phone: str = "",
+    cv_email: str = "",
+    extracted_skills = None,
 ) -> str:
     """
     Create a new interview session.
@@ -210,6 +213,9 @@ def create_session(
         matched_skills=matched_skills,
         missing_skills=[],
         cv_score=float(cv_score),
+        phone=phone,
+        cv_email=cv_email,
+        extracted_skills=extracted_skills,
     )
 
     return session_id
