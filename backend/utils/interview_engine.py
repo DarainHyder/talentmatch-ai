@@ -10,6 +10,7 @@ All scoring/evaluation uses spaCy + pure Python algorithms — no API key needed
 import os
 import json
 import random
+import re
 from typing import List, Dict
 
 # ---------------------------------------------------------------------------
@@ -104,6 +105,57 @@ def detect_ai_content(text: str) -> bool:
 # QUESTION GENERATION  (Gemini API)
 # ===========================================================================
 
+def _fallback_questions(
+    job_title: str,
+    job_description: str,
+    matched_skills: List[str],
+) -> List[str]:
+    """
+    Build a more specific fallback question set when Gemini is unavailable.
+    """
+    skills = [s for s in matched_skills if s and isinstance(s, str)]
+    skills = skills[:4]
+    questions = []
+
+    if skills:
+        questions.append(
+            f"Tell me about a strong project where you used {skills[0]} and how it helped deliver results."
+        )
+    else:
+        questions.append(
+            "Tell me about your most relevant professional achievement for this role."
+        )
+
+    questions.append(
+        f"What attracted you to the {job_title or 'role'}, and how does your experience align with the core responsibilities?"
+    )
+
+    if len(skills) > 1:
+        questions.append(
+            f"Describe a challenge you faced while working with {skills[1]} and what you learned from it."
+        )
+    else:
+        questions.append(
+            "Describe a challenge you overcame recently and how you solved it."
+        )
+
+    questions.append(
+        f"How would you apply your knowledge of {', '.join(skills) if skills else 'your strongest skills'} to this type of role?"
+    )
+
+    if 'team' in job_description.lower() or 'collaborate' in job_description.lower():
+        questions.append(
+            "How do you collaborate with others on a technical team, and what communication approach do you use?"
+        )
+    else:
+        questions.append(
+            "What is your process for learning new technologies or tools while working on a project?"
+        )
+
+    random.shuffle(questions)
+    return [q for q in questions if q.strip()][:5]
+
+
 def generate_questions(
     cv_text: str,
     job_title: str,
@@ -111,28 +163,25 @@ def generate_questions(
     matched_skills: List[str],
 ) -> List[str]:
     """
-    Generate 6 personalised interview questions via Gemini API.
+    Generate 5 personalised interview questions via Gemini API.
 
-    Falls back to _DEFAULT_QUESTIONS if:
-    - GEMINI_API_KEY is not set
-    - API quota is exceeded
-    - Any other Gemini error occurs
+    Falls back to a dynamic skills-aware question set if Gemini is unavailable.
 
     Returns
     -------
-    list of 6 question strings
+    list of 5 question strings
     """
     api_key_str = os.getenv("GEMINI_API_KEY", "").strip()
     api_keys = [k.strip() for k in api_key_str.split(",") if k.strip()]
 
     if not api_keys:
-        print("[interview_engine] GEMINI_API_KEY not set — using default questions.")
-        return _DEFAULT_QUESTIONS[:6]
+        print("[interview_engine] GEMINI_API_KEY not set — using fallback questions.")
+        return _fallback_questions(job_title, job_description, matched_skills)
 
     skills_str = ", ".join(matched_skills) if matched_skills else "general skills"
     cv_snippet = cv_text[:500].replace("\n", " ")
 
-    prompt = f"""You are a technical recruiter. Given this candidate's CV and job description, generate exactly 6 interview questions.
+    prompt = f"""You are a technical recruiter. Given this candidate's CV and job description, generate exactly 5 interview questions.
 
 Job Title: {job_title}
 Job Description: {job_description}
@@ -179,13 +228,13 @@ Rules:
                     print(f"[interview_engine] Key {attempt+1} exhausted. Trying next key...")
                     continue
                 else:
-                    print("[interview_engine] All Gemini keys exhausted! Falling back to default questions.")
-                    return _DEFAULT_QUESTIONS[:6]
+                    print("[interview_engine] All Gemini keys exhausted! Falling back to skills-aware questions.")
+                    return _fallback_questions(job_title, job_description, matched_skills)
             else:
-                print(f"[interview_engine] Gemini error: {e} — falling back to default questions.")
-                return _DEFAULT_QUESTIONS[:6]
+                print(f"[interview_engine] Gemini error: {e} — falling back to skills-aware questions.")
+                return _fallback_questions(job_title, job_description, matched_skills)
                 
-    return _DEFAULT_QUESTIONS[:6]
+    return _fallback_questions(job_title, job_description, matched_skills)
 
 
 def needs_followup(answer_text: str) -> bool:
@@ -257,6 +306,8 @@ def score_answer(answer_text: str) -> dict:
     if not answer_text or not answer_text.strip():
         return { "score": 0.0, "is_ai": False }
 
+    word_count = len(answer_text.strip().split())
+    word_count_score = min(word_count / 50, 1.0) * 30
     is_ai = detect_ai_content(answer_text)
 
     # --- Component 2: positive keyword hits ---

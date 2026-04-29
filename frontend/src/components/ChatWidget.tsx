@@ -21,9 +21,50 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isUploaded, setIsUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
-  
+  const [restoreCompleted, setRestoreCompleted] = useState(false);
+  const STORAGE_KEY = 'smart_hire_chat_state';
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Restore session state after page refresh
+  useEffect(() => {
+    if (restoreCompleted) return;
+
+    try {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed?.sessionId) {
+          setSessionId(parsed.sessionId);
+          setIsUploaded(true);
+          setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : messages);
+          setUserName(parsed.userName || '');
+          setUserEmail(parsed.userEmail || '');
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to restore chat session:', error);
+    } finally {
+      setRestoreCompleted(true);
+    }
+  }, [restoreCompleted, messages]);
+
+  useEffect(() => {
+    if (!restoreCompleted) return;
+    const payload = {
+      sessionId,
+      isUploaded,
+      userName,
+      userEmail,
+      messages,
+    };
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn('Unable to persist chat state:', error);
+    }
+  }, [sessionId, isUploaded, userName, userEmail, messages, restoreCompleted]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -31,6 +72,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isTyping]);
+
+  const fetchWithRetry = async (url: string, options: RequestInit, retries = 1): Promise<any> => {
+    try {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        const message = data.error || data.message || res.statusText || 'Unknown server error';
+        throw new Error(message);
+      }
+
+      return data;
+    } catch (error: any) {
+      if (retries > 0) {
+        await new Promise(resolve => setTimeout(resolve, 700));
+        return fetchWithRetry(url, options, retries - 1);
+      }
+      throw error;
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -43,17 +104,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     formData.append('email', userEmail || 'candidate@smarthire.ai');
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat/start`, {
+      const data = await fetchWithRetry(`${API_BASE}/api/chat/start`, {
         method: 'POST',
         body: formData,
-      });
-      const data = await res.json();
-      
+      }, 2);
+
       if (data.session_id && data.qualified) {
         setSessionId(data.session_id);
         setIsUploaded(true);
         setMessages(prev => [
-          ...prev, 
+          ...prev,
           { role: 'user', content: `Attached CV: ${file.name}` },
           { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Welcome ${data.name || 'Candidate'}. Neural Indexing Completed (${data.cv_score}% match).` },
           { role: 'bot', content: data.first_question }
@@ -62,11 +122,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
         setMessages(prev => [
           ...prev,
           { role: 'user', content: `Attached CV: ${file.name}` },
-          { role: 'bot', content: data.message }
+          { role: 'bot', content: data.message || 'Your CV was processed but did not meet the minimum requirements.' }
+        ]);
+      } else {
+        setMessages(prev => [
+          ...prev,
+          { role: 'bot', content: data.error || 'Unexpected response from the interview engine.' }
         ]);
       }
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', content: "Neural link interrupted. Please ensure the CV is a valid PDF/Word document." }]);
+    } catch (err: any) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', content: err?.message || 'Neural link interrupted. Please ensure the CV is a valid PDF/Word document.' }
+      ]);
     } finally {
       setUploading(false);
     }
@@ -82,20 +150,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     setIsTyping(true);
 
     try {
-      const res = await fetch(`${API_BASE}/api/chat/message`, {
+      const data = await fetchWithRetry(`${API_BASE}/api/chat/message`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ session_id: sessionId, message: userMsg }),
-      });
-      const data = await res.json();
-      
+      }, 2);
+
       if (data.done) {
         setMessages(prev => [...prev, { role: 'bot', content: `${data.message}\n\nFinal Score: ${data.final_score}%` }]);
       } else {
-        setMessages(prev => [...prev, { role: 'bot', content: data.question }]);
+        setMessages(prev => [...prev, { role: 'bot', content: data.question || data.error || 'Unable to fetch the next question.' }]);
       }
-    } catch (err) {
-      setMessages(prev => [...prev, { role: 'bot', content: "Neural lag detected. Attempting to reconnect to core..." }]);
+    } catch (err: any) {
+      setMessages(prev => [...prev, { role: 'bot', content: err?.message || 'Neural lag detected. Attempting to reconnect to core...' }]);
     } finally {
       setIsTyping(false);
     }

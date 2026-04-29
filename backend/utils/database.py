@@ -242,6 +242,22 @@ def get_candidate(session_id: str) -> dict:
     return _row_to_dict(cursor.fetchone())
 
 
+def delete_candidate(session_id: str) -> None:
+    """
+    Delete a candidate and all associated transcript messages.
+    """
+    conn = get_db()
+    conn.execute(
+        "DELETE FROM transcripts WHERE session_id = ?",
+        (session_id,),
+    )
+    conn.execute(
+        "DELETE FROM candidates WHERE session_id = ?",
+        (session_id,),
+    )
+    conn.commit()
+
+
 # ---------------------------------------------------------------------------
 # Transcript functions
 # ---------------------------------------------------------------------------

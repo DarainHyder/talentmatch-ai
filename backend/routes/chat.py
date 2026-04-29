@@ -365,6 +365,44 @@ def get_session_detail(session_id: str):
         return jsonify({"error": str(e)}), 500
 
 
+@chat_bp.route("/api/chat/session/<string:session_id>", methods=["GET"])
+def get_public_session(session_id: str):
+    """
+    Public endpoint for candidates to restore an active chat session.
+    """
+    try:
+        session = session_store.get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found."}), 404
+
+        return jsonify({
+            "session_id": session_id,
+            "status": session.get("status", "interviewing"),
+            "awaiting_followup": session.get("awaiting_followup", False),
+            "current_question_index": session.get("current_question_index", 0),
+            "transcript": session.get("transcript", []),
+        }), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@chat_bp.route("/api/chat/sessions/<string:session_id>", methods=["DELETE"])
+@jwt_required()
+def delete_session(session_id: str):
+    """
+    Admin endpoint — delete a candidate record and its transcript.
+    """
+    try:
+        candidate = database.get_candidate(session_id)
+        if not candidate:
+            return jsonify({"error": "Candidate not found."}), 404
+
+        database.delete_candidate(session_id)
+        return jsonify({"deleted": True}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ---------------------------------------------------------------------------
 # GET /api/chat/stats  (public — aggregate counts only, no PII)
 # ---------------------------------------------------------------------------

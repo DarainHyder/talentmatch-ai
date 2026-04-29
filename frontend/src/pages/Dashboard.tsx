@@ -61,6 +61,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
     finally { setModalLoading(false); }
   };
 
+  const deleteCandidate = async (candidate: any) => {
+    const confirmed = window.confirm(`Delete candidate ${candidate.name}? This action cannot be undone.`);
+    if (!confirmed) return;
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch(`${API_BASE}/api/chat/sessions/${candidate.session_id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (res.ok && data.deleted) {
+        setCandidates(prev => prev.filter(c => c.session_id !== candidate.session_id));
+        if (selected?.session_id === candidate.session_id) {
+          setSelected(null);
+          setTranscript([]);
+        }
+      } else {
+        console.error('Delete failed', data);
+        alert(data.error || 'Unable to delete candidate record.');
+      }
+    } catch (e) {
+      console.error('Delete request failed', e);
+      alert('Unable to delete candidate record. Please try again later.');
+    }
+  };
+
   // V7 Rule: All hooks called ABOVE early return.
   if (isLoading || !user) {
     return (
@@ -153,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
                 ) : filtered.length === 0 ? (
                   <tr><td colSpan={4} className="px-8 py-20 text-center text-slate-400 font-bold italic">No candidates matching the current neural criteria.</td></tr>
                 ) : (
-                  filtered.map((c, i) => (
+                  filtered.map((c) => (
                     <tr key={c.session_id} className="group hover:bg-slate-50/50 transition-colors">
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
@@ -184,9 +211,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
                             {c.status}
                          </span>
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="px-8 py-6 text-right flex justify-end gap-2">
                         <button onClick={() => viewTranscript(c)} className="btn-primary !px-5 !py-2.5 rounded-xl !text-[9px] scale-90 group-hover:scale-100 transition-transform">
                           View Intel
+                        </button>
+                        <button onClick={() => deleteCandidate(c)} className="btn-secondary !px-5 !py-2.5 rounded-xl !text-[9px] scale-90 group-hover:scale-100 transition-transform bg-red-50 text-red-600 border border-red-100 hover:bg-red-100">
+                          Delete
                         </button>
                       </td>
                     </tr>
