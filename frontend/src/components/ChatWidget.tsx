@@ -22,6 +22,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const [isUploaded, setIsUploaded] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [restoreCompleted, setRestoreCompleted] = useState(false);
+  const [cvAttempts, setCvAttempts] = useState(0);
+  const [maxCvAttempts] = useState(3);
+  const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
   const STORAGE_KEY = 'smart_hire_chat_state';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -37,7 +40,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
         const parsed = JSON.parse(stored);
         if (parsed?.sessionId) {
           setSessionId(parsed.sessionId);
-          setIsUploaded(true);
+          setIsUploaded(parsed.isUploaded || false);
+          setCvAttempts(parsed.cvAttempts || 0);
+          setFirstQuestionAnswered(parsed.firstQuestionAnswered || false);
           setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : messages);
           setUserName(parsed.userName || '');
           setUserEmail(parsed.userEmail || '');
@@ -58,13 +63,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       userName,
       userEmail,
       messages,
+      cvAttempts,
+      firstQuestionAnswered,
     };
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
     } catch (error) {
       console.warn('Unable to persist chat state:', error);
     }
-  }, [sessionId, isUploaded, userName, userEmail, messages, restoreCompleted]);
+  }, [sessionId, isUploaded, userName, userEmail, messages, restoreCompleted, cvAttempts, firstQuestionAnswered]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -97,6 +104,23 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check if CV uploads are still allowed
+    if (firstQuestionAnswered) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', content: 'Resume upload has been locked. Your interview is in progress. You must complete this interview to participate again.' }
+      ]);
+      return;
+    }
+
+    if (cvAttempts >= maxCvAttempts) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', content: `You have used all ${maxCvAttempts} resume upload attempts. Please proceed with your current upload or contact support.` }
+      ]);
+      return;
+    }
+
     setUploading(true);
     const formData = new FormData();
     formData.append('cv_file', file);
@@ -109,6 +133,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
         body: formData,
       }, 2);
 
+      const newAttempts = cvAttempts + 1;
+      setCvAttempts(newAttempts);
+
       if (data.session_id && data.qualified) {
         setSessionId(data.session_id);
         setIsUploaded(true);
@@ -116,13 +143,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           ...prev,
           { role: 'user', content: `Attached CV: ${file.name}` },
           { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Welcome ${data.name || 'Candidate'}. Neural Indexing Completed (${data.cv_score}% match).` },
-          { role: 'bot', content: data.first_question }
+          { role: 'bot', content: data.first_question },
+          { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. Once you answer the first question below, you won't be able to upload a new resume.` }
         ]);
       } else if (data.qualified === false) {
         setMessages(prev => [
           ...prev,
           { role: 'user', content: `Attached CV: ${file.name}` },
-          { role: 'bot', content: data.message || 'Your CV was processed but did not meet the minimum requirements.' }
+          { role: 'bot', content: data.message || 'Your CV was processed but did not meet the minimum requirements.' },
+          { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. ${maxCvAttempts - newAttempts} attempts remaining.` }
         ]);
       } else {
         setMessages(prev => [
@@ -131,9 +160,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
         ]);
       }
     } catch (err: any) {
+      const newAttempts = cvAttempts + 1;
+      setCvAttempts(newAttempts);
       setMessages(prev => [
         ...prev,
-        { role: 'bot', content: err?.message || 'Neural link interrupted. Please ensure the CV is a valid PDF/Word document.' }
+        { role: 'bot', content: err?.message || 'Neural link interrupted. Please ensure the CV is a valid PDF/Word document.' },
+        { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. ${maxCvAttempts - newAttempts} attempts remaining.` }
       ]);
     } finally {
       setUploading(false);
@@ -159,6 +191,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       if (data.done) {
         setMessages(prev => [...prev, { role: 'bot', content: `${data.message}\n\nFinal Score: ${data.final_score}%` }]);
       } else {
+        // Track that first question has been answered (lock CV uploads after first answer)
+        if (!firstQuestionAnswered) {
+          setFirstQuestionAnswered(true);
+        }
         setMessages(prev => [...prev, { role: 'bot', content: data.question || data.error || 'Unable to fetch the next question.' }]);
       }
     } catch (err: any) {

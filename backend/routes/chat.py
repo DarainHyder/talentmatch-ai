@@ -239,11 +239,15 @@ def chat_message():
     if sess.get("status") != "interviewing":
         return jsonify({"error": "This interview session is already completed."}), 409
 
-    # --- Save candidate answer ---
-    session_store.append_to_transcript(session_id, "candidate", message)
-
     question_list = sess.get("question_list", [])
     current_idx   = sess.get("current_question_index", 0)
+
+    # --- Save candidate answer ---
+    session_store.append_to_transcript(session_id, "candidate", message)
+    
+    # Mark first question as answered to lock CV uploads after first answer
+    if current_idx == 0:
+        session_store.mark_first_question_answered(session_id)
 
     # --- Follow-up logic ---
     awaiting = sess.get("awaiting_followup", False)
@@ -393,14 +397,27 @@ def delete_session(session_id: str):
     Admin endpoint — delete a candidate record and its transcript.
     """
     try:
+        if not session_id or not isinstance(session_id, str) or len(session_id.strip()) == 0:
+            return jsonify({"error": "Invalid session_id."}), 400
+
         candidate = database.get_candidate(session_id)
         if not candidate:
             return jsonify({"error": "Candidate not found."}), 404
 
         database.delete_candidate(session_id)
-        return jsonify({"deleted": True}), 200
+        
+        # Evict from memory if exists
+        try:
+            session_store.get_session(session_id)  # attempt load
+            with session_store._lock:
+                session_store._active_sessions.pop(session_id, None)
+        except:
+            pass
+            
+        return jsonify({"deleted": True, "message": "Candidate deleted successfully."}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"[chat] Delete session error: {e}")
+        return jsonify({"error": f"Failed to delete candidate: {str(e)}"}), 500
 
 
 # ---------------------------------------------------------------------------

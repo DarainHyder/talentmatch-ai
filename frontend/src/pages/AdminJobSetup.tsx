@@ -39,19 +39,31 @@ const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!job.title.trim()) {
+      showToast('error', 'Job title is required.');
+      return;
+    }
     setSaving(true);
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        showToast('error', 'Authentication token missing. Please log in again.');
+        setSaving(false);
+        return;
+      }
       const skills = job.required_skills.split(',').map((s: string) => s.trim()).filter(Boolean);
       const res = await fetch(`${API_BASE}/api/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ title: job.title, description: job.description, required_skills: skills }),
       });
-      if (!res.ok) throw new Error('Save failed.');
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed.');
+      setJob(data.job || job);
       showToast('success', 'Configuration updated successfully.');
     } catch (err: any) {
-      showToast('error', err.message);
+      console.error('Job save error:', err);
+      showToast('error', err.message || 'Failed to save job description.');
     } finally {
       setSaving(false);
     }

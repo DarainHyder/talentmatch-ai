@@ -1,1 +1,2 @@
 api key = AIzaSyCjDcaYngnt6eQSEF1HzlO6vCnlKXJ_MfQ
+huggingface token = [REDACTED - use environment variable HF_TOKEN]

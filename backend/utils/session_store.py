@@ -52,9 +52,25 @@ def _init_sessions_table() -> None:
             final_score             REAL     DEFAULT 0,
             interview_score         REAL     DEFAULT 0,
             summary                 TEXT,
+            cv_upload_attempts      INTEGER  DEFAULT 0,
+            max_cv_attempts         INTEGER  DEFAULT 3,
+            first_question_answered INTEGER  DEFAULT 0,
             created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
+    # Add new columns if they don't exist
+    try:
+        conn.execute("ALTER TABLE sessions ADD COLUMN cv_upload_attempts INTEGER DEFAULT 0;")
+    except:
+        pass
+    try:
+        conn.execute("ALTER TABLE sessions ADD COLUMN max_cv_attempts INTEGER DEFAULT 3;")
+    except:
+        pass
+    try:
+        conn.execute("ALTER TABLE sessions ADD COLUMN first_question_answered INTEGER DEFAULT 0;")
+    except:
+        pass
     conn.commit()
 
 
@@ -95,6 +111,7 @@ def _deserialize(row: dict) -> dict:
             s["transcript"] = []
     # SQLite stores bool as integer; normalise
     s["awaiting_followup"] = bool(s.get("awaiting_followup", 0))
+    s["first_question_answered"] = bool(s.get("first_question_answered", 0))
     return s
 
 
@@ -108,12 +125,14 @@ def _write_to_sqlite(session: dict) -> None:
             (session_id, name, email, cv_text, matched_skills,
              cv_score, question_list, current_question_index,
              transcript, awaiting_followup, status,
-             final_score, interview_score, summary)
+             final_score, interview_score, summary, cv_upload_attempts,
+             max_cv_attempts, first_question_answered)
         VALUES
             (:session_id, :name, :email, :cv_text, :matched_skills,
              :cv_score, :question_list, :current_question_index,
              :transcript, :awaiting_followup, :status,
-             :final_score, :interview_score, :summary)
+             :final_score, :interview_score, :summary, :cv_upload_attempts,
+             :max_cv_attempts, :first_question_answered)
         ON CONFLICT(session_id) DO UPDATE SET
             name                   = excluded.name,
             email                  = excluded.email,
@@ -127,7 +146,10 @@ def _write_to_sqlite(session: dict) -> None:
             status                 = excluded.status,
             final_score            = excluded.final_score,
             interview_score        = excluded.interview_score,
-            summary                = excluded.summary
+            summary                = excluded.summary,
+            cv_upload_attempts     = excluded.cv_upload_attempts,
+            max_cv_attempts        = excluded.max_cv_attempts,
+            first_question_answered = excluded.first_question_answered
         """,
         {
             "session_id":             s.get("session_id", ""),
@@ -144,9 +166,34 @@ def _write_to_sqlite(session: dict) -> None:
             "final_score":            s.get("final_score", 0.0),
             "interview_score":        s.get("interview_score", 0.0),
             "summary":                s.get("summary", ""),
+            "cv_upload_attempts":     s.get("cv_upload_attempts", 0),
+            "max_cv_attempts":        s.get("max_cv_attempts", 3),
+            "first_question_answered": 1 if s.get("first_question_answered") else 0,
         },
     )
     conn.commit()
+
+
+def increment_cv_attempts(session_id: str) -> int:
+    """
+    Increment CV upload attempt counter.
+    Returns the updated attempt count.
+    """
+    session = get_session(session_id)
+    if session is None:
+        raise ValueError(f"Session '{session_id}' not found.")
+    
+    attempts = session.get("cv_upload_attempts", 0) + 1
+    update_session(session_id, cv_upload_attempts=attempts)
+    return attempts
+
+
+def mark_first_question_answered(session_id: str) -> None:
+    """
+    Mark that the candidate has answered the first question.
+    After this, no more CV uploads are allowed.
+    """
+    update_session(session_id, first_question_answered=True)
 
 
 # ---------------------------------------------------------------------------
@@ -196,6 +243,9 @@ def create_session(
         "interview_score":        0.0,
         "summary":                "",
         "created_at":             datetime.utcnow().isoformat(),
+        "cv_upload_attempts":     0,
+        "max_cv_attempts":        3,
+        "first_question_answered": False,
     }
 
     with _lock:

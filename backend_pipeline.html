@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TalentMatch AI — Backend Pipeline Documentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-size: 13px;
+    line-height: 1.75;
+  }
+
+  .page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 60px 48px;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    border-bottom: 3px solid #1a1a1a;
+    padding-bottom: 32px;
+    margin-bottom: 40px;
+  }
+  .cover-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #888;
+    margin-bottom: 14px;
+  }
+  .cover h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0d0d0d;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+  .cover-sub {
+    font-size: 14px;
+    color: #555;
+    font-weight: 400;
+    margin-bottom: 24px;
+  }
+  .cover-meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .meta-item {
+    padding: 12px 16px;
+    border-right: 1px solid #ddd;
+  }
+  .meta-item:last-child { border-right: none; }
+  .meta-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 3px;
+  }
+  .meta-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #1a1a1a;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #999;
+    border-bottom: 1px solid #e5e5e5;
+    padding-bottom: 8px;
+    margin-bottom: 24px;
+    margin-top: 44px;
+  }
+
+  /* ── OVERVIEW STATS ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .stat-box {
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    padding: 18px 20px;
+    background: #fafafa;
+  }
+  .stat-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+  }
+
+  /* ── ARCHITECTURE DIAGRAM ── */
+  .arch-box-row {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 10px;
+  }
+  .arch-node {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #1a1a1a;
+    background: #fff;
+    text-align: center;
+    min-width: 150px;
+  }
+  .arch-node.dark {
+    background: #1a1a1a;
+    color: #fff;
+    border-color: #1a1a1a;
+  }
+  .arch-node.shaded {
+    background: #f4f4f4;
+    border-color: #bbb;
+  }
+  .arch-arrow-h {
+    font-size: 18px;
+    color: #aaa;
+    padding: 0 10px;
+    font-weight: 300;
+  }
+  .arch-file {
+    font-size: 10px;
+    color: #999;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: center;
+    margin-top: 3px;
+  }
+  .arch-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* ── PIPELINE STEPS ── */
+  .step {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .step-number-col {
+    background: #1a1a1a;
+    color: #fff;
+    width: 52px;
+    min-width: 52px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 0;
+  }
+  .step-num-text {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .step-num-label {
+    font-size: 8px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #888;
+    margin-top: 4px;
+  }
+  .step-body {
+    flex: 1;
+    padding: 20px 24px;
+    border-left: 1px solid #e0e0e0;
+  }
+  .step-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+  .step-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0d0d0d;
+  }
+  .step-actor {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #666;
+    white-space: nowrap;
+    padding: 4px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 2px;
+    background: #f5f5f5;
+  }
+  .step-desc {
+    font-size: 13px;
+    color: #333;
+    margin-bottom: 12px;
+  }
+
+  .detail-list {
+    list-style: none;
+    margin-top: 10px;
+  }
+  .detail-list li {
+    font-size: 12px;
+    color: #444;
+    padding: 6px 10px;
+    background: #fafafa;
+    border-left: 2px solid #d0d0d0;
+    margin-bottom: 5px;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .detail-list li.important {
+    border-left-color: #1a1a1a;
+    background: #f5f5f5;
+  }
+  .detail-list li::before {
+    content: '–';
+    color: #999;
+    flex-shrink: 0;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #f7f7f7;
+    border: 1px solid #e0e0e0;
+    border-left: 3px solid #1a1a1a;
+    border-radius: 0 4px 4px 0;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #333;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+  .code-comment { color: #999; }
+  .code-key { color: #1a1a1a; font-weight: 600; }
+  .code-str { color: #555; }
+  .code-fn { color: #333; font-weight: 500; }
+
+  /* ── TAGS ── */
+  .tag-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border: 1px solid #d0d0d0;
+    border-radius: 2px;
+    color: #444;
+    background: #f5f5f5;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── SCORE BREAKDOWN ── */
+  .score-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .score-cell {
+    padding: 16px 18px;
+    border-right: 1px solid #ddd;
+  }
+  .score-cell:last-child { border-right: none; }
+  .score-weight {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: block;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .score-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+  }
+  .score-desc {
+    font-size: 10px;
+    color: #777;
+    line-height: 1.5;
+  }
+
+  /* ── FALLBACK TABLE ── */
+  .fallback-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+  }
+  .fallback-table th {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .fallback-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+    vertical-align: top;
+  }
+  .fallback-table tr:last-child td { border-bottom: none; }
+  .fallback-table tr:nth-child(even) td { background: #fafafa; }
+  .fallback-table td:first-child { font-weight: 700; color: #1a1a1a; width: 40px; text-align: center; }
+  .priority-label {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border: 1px solid #ccc;
+    color: #555;
+  }
+
+  /* ── DATA FLOW TABLE ── */
+  .flow-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .flow-table th {
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .flow-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+  }
+  .flow-table tr:last-child td { border-bottom: none; }
+  .flow-table tr:nth-child(even) td { background: #fafafa; }
+  .flow-table td:first-child { font-weight: 600; color: #333; white-space: nowrap; }
+  code {
+    background: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #1a1a1a;
+    border: 1px solid #ddd;
+  }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    border-top: 2px solid #1a1a1a;
+    padding-top: 20px;
+    margin-top: 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .doc-footer .left { font-size: 11px; color: #666; }
+  .doc-footer .left strong { color: #1a1a1a; font-weight: 600; }
+  .doc-footer .right { font-size: 10px; color: #aaa; text-align: right; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; }
+    .page { padding: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- COVER -->
+  <div class="cover">
+    <div class="cover-label">Technical Reference Document</div>
+    <h1>Backend Pipeline Documentation<br>CV Submission to Interview Initialization</h1>
+    <p class="cover-sub">
+      A complete description of the data flow, processing stages, responsible components,
+      and fallback mechanisms in the TalentMatch AI recruitment backend.
+    </p>
+    <div class="cover-meta">
+      <div class="meta-item">
+        <div class="meta-label">NER Model</div>
+        <div class="meta-value">DeBERTa-v3-base</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">AI API</div>
+        <div class="meta-value">Gemini 2.0 Flash</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Database</div>
+        <div class="meta-value">SQLite + In-Memory</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">Deployment</div>
+        <div class="meta-value">HuggingFace Spaces</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="section-heading">Overview</div>
+  <div class="stats-row">
+    <div class="stat-box">
+      <span class="stat-num">8</span>
+      <span class="stat-label">Sequential processing steps from form submission to interview start</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">2</span>
+      <span class="stat-label">Independent AI systems (DeBERTa NER + Gemini) working in combination</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-num">3</span>
+      <span class="stat-label">Fallback layers ensuring zero crash behavior under any failure condition</span>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div class="section-heading">System Architecture</div>
+  <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 28px 24px; background: #fafafa;">
+    <div style="font-size: 10px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #999; margin-bottom: 20px;">Request / Response Flow</div>
+    <div style="display: flex; align-items: center; gap: 0; margin-bottom: 20px;">
+      <div class="arch-col">
+        <div class="arch-node dark">React Frontend</div>
+        <div class="arch-file">Vercel</div>
+      </div>
+      <div class="arch-arrow-h">&#8594;</div>
+      <div class="arch-col">
+        <div class="arch-node">Flask Route Handler</div>
+        <div class="arch-file">routes/chat.py</div>
+      </div>
+      <div class="arch-arrow-h">&#8594;</div>
+      <div class="arch-col">
+        <div class="arch-node shaded">CV Parser</div>
+        <div class="arch-file">utils/cv_parser.py</div>
+      </div>
+      <div class="arch-arrow-h">&#8594;</div>
+      <div class="arch-col">
+        <div class="arch-node shaded">DeBERTa NER</div>
+        <div class="arch-file">skill_matcher_deberta.py</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 0; justify-content: flex-end;">
+      <div class="arch-col">
+        <div class="arch-node shaded">Interview Engine</div>
+        <div class="arch-file">interview_engine.py</div>
+      </div>
+      <div class="arch-arrow-h">&#8592;</div>
+      <div class="arch-col">
+        <div class="arch-node shaded">SQLite Database</div>
+        <div class="arch-file">utils/database.py</div>
+      </div>
+      <div class="arch-arrow-h">&#8592;</div>
+      <div class="arch-col">
+        <div class="arch-node shaded">Session Store</div>
+        <div class="arch-file">utils/session_store.py</div>
+      </div>
+      <div class="arch-arrow-h">&#8592;</div>
+      <div class="arch-col">
+        <div class="arch-node shaded">Gemini API</div>
+        <div class="arch-file">utils/skill_matcher.py</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-heading">Step-by-Step Pipeline</div>
+
+  <!-- STEP 1 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">01</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">Candidate Submits Name, Email, and CV File</div>
+        <span class="step-actor">Frontend &mdash; React / Vercel</span>
+      </div>
+      <p class="step-desc">
+        The candidate fills in their full name and email address, selects a CV file (PDF or DOCX format, maximum 5 MB), and submits the form. React validates inputs locally and dispatches a <strong>multipart/form-data POST request</strong> to the backend API endpoint.
+      </p>
+      <div class="code-block">
+<span class="code-comment">// HTTP request sent by the frontend:</span>
+POST https://sawabedarain-smart-hire.hf.space/api/chat/start
+Content-Type: multipart/form-data
+
+FormData {
+  <span class="code-key">name</span>:     <span class="code-str">"John Smith"</span>,
+  <span class="code-key">email</span>:    <span class="code-str">"john@example.com"</span>,
+  <span class="code-key">cv_file</span>:  <span class="code-str">[Binary PDF / DOCX data]</span>,
+  <span class="code-key">job_id</span>:   <span class="code-str">"job_abc123"</span>
+}</div>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">02</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">Request Validation and Job Data Retrieval</div>
+        <span class="step-actor">Flask &mdash; routes/chat.py</span>
+      </div>
+      <p class="step-desc">
+        The Flask route handler receives the request and performs input validation before any processing begins. Invalid requests are rejected immediately with an appropriate HTTP error code.
+      </p>
+      <ul class="detail-list">
+        <li>Verifies that <code>cv_file</code> is present in the multipart request</li>
+        <li>Validates file extension — only <code>.pdf</code> and <code>.docx</code> are accepted</li>
+        <li>Enforces the 5 MB file size limit; exceeding it returns HTTP 413</li>
+        <li>Extracts <code>name</code>, <code>email</code>, and <code>job_id</code> from the form fields</li>
+        <li class="important">Retrieves the corresponding job record (required skills, job description) from the job store</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">03</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">CV Text Extraction and Cleaning</div>
+        <span class="step-actor">Backend &mdash; utils/cv_parser.py</span>
+      </div>
+      <p class="step-desc">
+        The binary CV file is parsed into a raw plain-text string. Separate libraries handle PDF and DOCX formats. The extracted text then undergoes a cleaning pipeline to remove noise before it is passed to the AI systems.
+      </p>
+      <ul class="detail-list">
+        <li><strong>PDF</strong> — processed using <code>PyPDF2.PdfReader</code>; text is extracted from each page and concatenated</li>
+        <li><strong>DOCX</strong> — processed using <code>python-docx.Document</code>; all paragraph objects are joined</li>
+        <li>Cleaning removes HTML tags, non-ASCII characters, and excess whitespace</li>
+        <li class="important">The resulting plain-text string is the input for all downstream AI components</li>
+      </ul>
+      <div class="code-block">
+<span class="code-comment"># Text normalization applied after extraction:</span>
+<span class="code-fn">re.sub</span>(<span class="code-str">r'&lt;[^&gt;]+&gt;'</span>,   <span class="code-str">' '</span>, text)  <span class="code-comment"># strip HTML tags</span>
+<span class="code-fn">re.sub</span>(<span class="code-str">r'http\S+|www\S+'</span>, <span class="code-str">' '</span>, text)  <span class="code-comment"># remove URLs</span>
+<span class="code-fn">re.sub</span>(<span class="code-str">r'[^\x00-\x7F]+'</span>,  <span class="code-str">' '</span>, text)  <span class="code-comment"># remove non-ASCII</span>
+<span class="code-fn">re.sub</span>(<span class="code-str">r'\s+'</span>,            <span class="code-str">' '</span>, text)  <span class="code-comment"># normalize whitespace</span></div>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">04</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">DeBERTa NER — Automated Skill Extraction</div>
+        <span class="step-actor">AI Model &mdash; skill_matcher_deberta.py</span>
+      </div>
+      <p class="step-desc">
+        The cleaned CV text is processed by the fine-tuned <strong>DeBERTa-v3-base Named Entity Recognition model</strong>. The model operates at the token level, classifying each token as one of three labels: <code>O</code> (not a skill), <code>B-SKILL</code> (beginning of a skill entity), or <code>I-SKILL</code> (continuation of a skill entity). Adjacent B-SKILL and I-SKILL tokens are merged into complete skill phrases.
+      </p>
+      <ul class="detail-list">
+        <li>Input is tokenized using SentencePiece with a maximum context of 512 tokens per chunk</li>
+        <li>Long CVs are split into overlapping windows (stride = 128 tokens) and all chunks are processed independently</li>
+        <li>Results from all chunks are merged and deduplicated</li>
+        <li>Inference runs on CPU — no GPU required in production</li>
+        <li class="important">Output: a deduplicated Python list of extracted skill strings, e.g. <code>["python", "machine learning", "sql", "docker"]</code></li>
+      </ul>
+      <div class="tag-row">
+        <span class="tag">NER F1 Score: 0.6276</span>
+        <span class="tag">Precision: 0.4883</span>
+        <span class="tag">Recall: 0.8782</span>
+        <span class="tag">Model: microsoft/deberta-v3-base</span>
+      </div>
+      <div class="code-block">
+<span class="code-comment"># BIO tag decoding logic:</span>
+B-SKILL  →  begin accumulating a new skill phrase
+I-SKILL  →  append the current token to the active phrase
+O        →  finalize and store the active phrase (if any), reset</div>
+    </div>
+  </div>
+
+  <!-- STEP 5 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">05</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">Gemini AI — Semantic Skill Matching and Scoring</div>
+        <span class="step-actor">AI API &mdash; utils/skill_matcher.py</span>
+      </div>
+      <p class="step-desc">
+        The CV text, the DeBERTa-extracted skill list, the job description, and the list of required skills are composed into a structured prompt and sent to <strong>Google Gemini 2.0 Flash</strong>. Gemini performs a semantic ATS evaluation, applying natural language understanding to recognize synonyms, implied expertise, and contextual skill equivalences that literal keyword matching cannot detect.
+      </p>
+      <div class="code-block">
+<span class="code-comment"># Prompt structure sent to Gemini:</span>
+You are an elite ATS recruiter. Evaluate the candidate strictly
+against the job requirements. Recognize synonyms and context.
+
+Job Description:    {jd_text}
+Required Skills:    Python, Docker, SQL, React
+CV Text:            {cv_text[:3000]}
+<span class="code-key">NER-extracted skills: python, sql, machine learning, ...</span>   <span class="code-comment"># DeBERTa provides this</span>
+
+Return ONLY valid JSON:
+{ "cv_score": 0-100, "matched_skills": [...], "missing_skills": [...] }</div>
+      <ul class="detail-list">
+        <li class="important">The DeBERTa skill list enriches the Gemini prompt — surfacing skills the AI might otherwise miss in dense CV text</li>
+        <li>Semantic matching is applied: "React" satisfies "Frontend Development"; "ML" satisfies "Machine Learning"</li>
+        <li>Multiple API keys are rotated if the primary key's quota is exceeded</li>
+        <li>Returns a structured JSON object containing the score, matched skills, and missing skills</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">06</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">CV Score Computation</div>
+        <span class="step-actor">Backend &mdash; utils/skill_matcher.py</span>
+      </div>
+      <p class="step-desc">
+        When Gemini returns a result, its score is used directly. If Gemini is unavailable, the score is computed from three weighted signals as described below. The final score is a number between 0 and 100.
+      </p>
+
+      <div class="score-row">
+        <div class="score-cell">
+          <span class="score-weight">50%</span>
+          <div class="score-name">Skill Match Ratio</div>
+          <div class="score-desc">Percentage of required skills found in the CV, matched via DeBERTa extraction and a synonym map.</div>
+        </div>
+        <div class="score-cell">
+          <span class="score-weight">30%</span>
+          <div class="score-name">TF-IDF Cosine Similarity</div>
+          <div class="score-desc">Cosine similarity between the CV text and the job description using unigram and bigram TF-IDF vectors.</div>
+        </div>
+        <div class="score-cell">
+          <span class="score-weight">20%</span>
+          <div class="score-name">Experience Bonus</div>
+          <div class="score-desc">Years of experience extracted via regex from the CV text. 1 year = 10 points, capped at 10 years (100 points).</div>
+        </div>
+      </div>
+
+      <div class="code-block">
+<span class="code-comment"># Score formula (fallback mode):</span>
+cv_score = (skill_match_ratio &times; <span class="code-key">0.50</span>)
+         + (tfidf_similarity   &times; <span class="code-key">0.30</span>)
+         + (experience_bonus   &times; <span class="code-key">0.20</span>)
+
+<span class="code-comment"># Screening threshold:</span>
+cv_score &ge; 30  &rarr;  candidate proceeds to interview</div>
+    </div>
+  </div>
+
+  <!-- STEP 7 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">07</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">Session Creation and Database Persistence</div>
+        <span class="step-actor">Backend &mdash; session_store.py + database.py</span>
+      </div>
+      <p class="step-desc">
+        A unique session object is created that consolidates the candidate's identity, CV content, computed scores, matched/missing skills, and conversation state. The session is maintained both in-memory (for low-latency read/write during the live interview) and in SQLite (for durability across server restarts).
+      </p>
+      <ul class="detail-list">
+        <li>A UUID is generated as the unique <code>session_id</code></li>
+        <li>Session is inserted into the <code>_active_sessions</code> dictionary, protected by a <code>threading.Lock()</code> for thread safety</li>
+        <li>A candidate record is inserted into the <code>candidates</code> table in SQLite</li>
+        <li>The session state is written to the <code>sessions</code> table for persistence</li>
+        <li class="important">Session stores: name, email, cv_text, cv_score, matched_skills, missing_skills, job_id, chat_history, question_index</li>
+      </ul>
+      <div class="code-block">
+<span class="code-comment"># Session object schema:</span>
+{
+  <span class="code-key">"session_id"</span>:      <span class="code-str">"550e8400-e29b-41d4-a716-446655440000"</span>,
+  <span class="code-key">"name"</span>:            <span class="code-str">"John Smith"</span>,
+  <span class="code-key">"email"</span>:           <span class="code-str">"john@example.com"</span>,
+  <span class="code-key">"cv_score"</span>:        74.5,
+  <span class="code-key">"matched_skills"</span>:  [<span class="code-str">"python"</span>, <span class="code-str">"sql"</span>, <span class="code-str">"docker"</span>],
+  <span class="code-key">"missing_skills"</span>:  [<span class="code-str">"kubernetes"</span>],
+  <span class="code-key">"chat_history"</span>:    [],          <span class="code-comment"># grows with each message</span>
+  <span class="code-key">"question_index"</span>:  0
+}</div>
+    </div>
+  </div>
+
+  <!-- STEP 8 -->
+  <div class="step">
+    <div class="step-number-col">
+      <span class="step-num-text">08</span>
+      <span class="step-num-label">Step</span>
+    </div>
+    <div class="step-body">
+      <div class="step-top">
+        <div class="step-title">Interview Initialization — First Question Generated</div>
+        <span class="step-actor">AI Engine &mdash; utils/interview_engine.py</span>
+      </div>
+      <p class="step-desc">
+        The Interview Engine uses the candidate's full profile — CV score, matched skills, missing skills, and the job requirements — to construct a targeted prompt for Gemini. Gemini generates the first interview question, which is personalized to the candidate's identified strengths and gaps rather than being generic.
+      </p>
+      <ul class="detail-list">
+        <li>Gemini receives: job title, required skills, candidate's matched skills, missing skills, and cv_score</li>
+        <li>Questions are prioritized around missing critical skills or probing the depth of matched skills</li>
+        <li>The final JSON response is returned to the frontend containing: <code>session_id</code>, <code>cv_score</code>, <code>matched_skills</code>, <code>missing_skills</code>, first interview question</li>
+        <li class="important">The chat loop then begins — each candidate answer is sent to <code>/api/chat/message</code>, triggering Gemini to generate the next question and update scores</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- FALLBACK -->
+  <div class="section-heading">AI Fallback Chain</div>
+  <p style="color:#555; font-size:12px; margin-bottom: 16px;">
+    The system is designed to never return an unhandled error. If a higher-priority AI layer fails due to quota limits, unavailability, or missing model files, the next layer activates automatically and transparently.
+  </p>
+  <table class="fallback-table">
+    <thead>
+      <tr>
+        <th>Priority</th>
+        <th>System</th>
+        <th>Method</th>
+        <th>Trigger Condition</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td><strong>Gemini 2.0 Flash</strong><br><span class="priority-label">Primary</span></td>
+        <td>Semantic ATS evaluation via LLM prompt. Understands context, synonyms, and implied skills.</td>
+        <td>Default. Always attempted first.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><strong>DeBERTa + TF-IDF Scoring</strong><br><span class="priority-label">Secondary</span></td>
+        <td>Uses NER-extracted skill list for match ratio, TF-IDF cosine similarity, and experience regex.</td>
+        <td>Activates when Gemini API returns an error or quota is exhausted.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><strong>Heuristic Keyword Matching</strong><br><span class="priority-label">Last Resort</span></td>
+        <td>Exact, lemma-based, and fuzzy string matching using spaCy. Combined with TF-IDF and experience extraction.</td>
+        <td>Activates when DeBERTa model files are not present or torch is not installed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- DATA FLOW TABLE -->
+  <div class="section-heading">Data Flow Reference</div>
+  <table class="flow-table">
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Input Data</th>
+        <th>Responsible Component</th>
+        <th>Output</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Form Submission</td>
+        <td>name, email, cv_file (binary), job_id</td>
+        <td>React Frontend (Vercel)</td>
+        <td>HTTP POST to <code>/api/chat/start</code></td>
+      </tr>
+      <tr>
+        <td>Request Validation</td>
+        <td>Raw HTTP multipart request</td>
+        <td><code>routes/chat.py</code> — Flask</td>
+        <td>Validated fields or HTTP 400 / 413 error</td>
+      </tr>
+      <tr>
+        <td>Text Extraction</td>
+        <td>Binary PDF or DOCX file</td>
+        <td><code>utils/cv_parser.py</code> — PyPDF2 / python-docx</td>
+        <td>Clean plain-text string of CV content</td>
+      </tr>
+      <tr>
+        <td>NER Skill Extraction</td>
+        <td>Cleaned CV text string</td>
+        <td><code>utils/skill_matcher_deberta.py</code> — DeBERTa-v3</td>
+        <td>List of extracted skill strings</td>
+      </tr>
+      <tr>
+        <td>Semantic Scoring</td>
+        <td>CV text + NER skills + JD + required skills</td>
+        <td><code>utils/skill_matcher.py</code> — Gemini 2.0 Flash</td>
+        <td>cv_score (0–100), matched_skills, missing_skills</td>
+      </tr>
+      <tr>
+        <td>Session Creation</td>
+        <td>All candidate data and computed scores</td>
+        <td><code>utils/session_store.py</code> + <code>utils/database.py</code></td>
+        <td>UUID session_id, SQLite candidate record</td>
+      </tr>
+      <tr>
+        <td>Interview Start</td>
+        <td>Candidate profile + job requirements</td>
+        <td><code>utils/interview_engine.py</code> — Gemini 2.0 Flash</td>
+        <td>Personalized first interview question</td>
+      </tr>
+      <tr>
+        <td>API Response</td>
+        <td>Aggregated session and question data</td>
+        <td>Flask JSON serialization</td>
+        <td><code>{ session_id, cv_score, matched_skills, message }</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- FOOTER -->
+  <div class="doc-footer">
+    <div class="left">
+      <strong>TalentMatch AI</strong> — Backend Pipeline Documentation<br>
+      DeBERTa-v3-base &nbsp;|&nbsp; Google Gemini 2.0 Flash &nbsp;|&nbsp; Flask &nbsp;|&nbsp; SQLite &nbsp;|&nbsp; HuggingFace Spaces
+    </div>
+    <div class="right">
+      NER F1 = 0.6276 &nbsp;|&nbsp; Recall = 0.8782<br>
+      sawabedarain-smart-hire.hf.space
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
