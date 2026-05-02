@@ -20,6 +20,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isUploaded, setIsUploaded] = useState(false);
+  const [jobAvailable, setJobAvailable] = useState(true);
+  const [jobInfo, setJobInfo] = useState<any | null>(null);
   const [uploading, setUploading] = useState(false);
   const [restoreCompleted, setRestoreCompleted] = useState(false);
   const [cvAttempts, setCvAttempts] = useState(0);
@@ -28,6 +30,27 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const STORAGE_KEY = 'smart_hire_chat_state';
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const fetchJobAvailability = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/jobs`);
+      if (!res.ok) {
+        setJobAvailable(false);
+        setJobInfo(null);
+        return;
+      }
+      const data = await res.json();
+      if (data?.job) {
+        setJobInfo(data.job);
+        setJobAvailable(Boolean(data.job.is_visible ?? true));
+      } else {
+        setJobAvailable(false);
+        setJobInfo(null);
+      }
+    } catch {
+      setJobAvailable(false);
+      setJobInfo(null);
+    }
+  };
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Restore session state after page refresh
@@ -73,6 +96,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     }
   }, [sessionId, isUploaded, userName, userEmail, messages, restoreCompleted, cvAttempts, firstQuestionAnswered]);
 
+  useEffect(() => {
+    fetchJobAvailability();
+  }, []);
+
   // Auto-scroll to bottom
   useEffect(() => {
     if (scrollRef.current) {
@@ -103,6 +130,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (!jobAvailable) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', content: 'No active job posting is available at the moment. The chatbot is paused until a new opportunity is published.' }
+      ]);
+      return;
+    }
 
     // Check if CV uploads are still allowed
     if (firstQuestionAnswered) {
@@ -227,8 +262,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
             }`}
           >
             {/* Header */}
-            <div className="px-6 py-4 flex items-center justify-between border-b border-white/20" style={{ background: '#26E4E4' }}>
-               <div className="flex items-center gap-3">
+            <div className="px-6 py-4 flex flex-col gap-3 border-b border-white/20" style={{ background: '#26E4E4' }}>
+               <div className="flex items-center gap-3 justify-between">
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white shadow-sm p-1">
                     <img src="/screenify-bot.svg" alt="Bot" className="w-full h-full object-contain" />
                   </div>
@@ -241,6 +276,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
                        </p>
                     </div>
                   </div>
+               </div>
+               <div className={`rounded-2xl px-4 py-2 text-xs font-semibold ${jobAvailable ? 'bg-white/15 text-white' : 'bg-white/20 text-slate-800'}`}>
+                 {jobAvailable ? (
+                   jobInfo ? `Now hiring: ${jobInfo.title} · ${jobInfo.required_skills || 'Skills not listed yet'}` : 'Loading current job opportunity...'
+                 ) : (
+                   'No active job opportunity at this time. Chatbot screening is paused until a role is published.'
+                 )}
                </div>
                {!inline && (
                  <button onClick={() => setIsOpen(false)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors">

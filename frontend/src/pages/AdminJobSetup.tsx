@@ -13,7 +13,7 @@ interface AdminJobSetupProps {
 
 const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }) => {
   const navigate = useNavigate();
-  const [job, setJob] = useState<any>({ title: '', description: '', required_skills: '' });
+  const [job, setJob] = useState<any>({ title: '', description: '', required_skills: '', is_visible: true });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
@@ -27,7 +27,7 @@ const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }
     if (!user) return;
     fetch(`${API_BASE}/api/jobs`)
       .then(r => r.json())
-      .then(d => { if (d.job) setJob(d.job); })
+      .then(d => { if (d.job) setJob({ ...d.job, is_visible: Boolean(d.job.is_visible ?? true) }); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [user]);
@@ -55,11 +55,13 @@ const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }
       const res = await fetch(`${API_BASE}/api/jobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ title: job.title, description: job.description, required_skills: skills }),
+        body: JSON.stringify({ title: job.title, description: job.description, required_skills: skills, is_visible: Boolean(job.is_visible) }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed.');
-      setJob(data.job || job);
+      const updated = data.job || job;
+      setJob(updated);
+      window.dispatchEvent(new Event('job-updated'));
       showToast('success', 'Configuration updated successfully.');
     } catch (err: any) {
       console.error('Job save error:', err);
@@ -125,6 +127,19 @@ const AdminJobSetup: React.FC<AdminJobSetupProps> = ({ user, isLoading, logout }
                          <span key={s} className="px-3 py-1 bg-cyan-50 text-cyan-600 border border-cyan-100 rounded-lg text-[10px] font-black uppercase tracking-wider">{s}</span>
                        ))}
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 py-4 border border-slate-200 rounded-3xl bg-slate-50">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(job.is_visible)}
+                        onChange={e => setJob((j: any) => ({ ...j, is_visible: e.target.checked }))}
+                        className="form-checkbox h-5 w-5 rounded border-slate-300 text-cyan-500"
+                      />
+                      <span className="text-sm font-bold text-slate-700">Publish role and enable chatbot</span>
+                    </label>
+                    <span className="text-xs uppercase tracking-[0.2em] text-slate-400">When disabled, the chat experience is paused for candidates.</span>
                   </div>
 
                   <div>

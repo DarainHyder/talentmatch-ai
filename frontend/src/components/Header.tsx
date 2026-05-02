@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+const API_BASE = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ?? '';
+
 interface HeaderProps {
   user: any;
   logout: () => void;
@@ -11,6 +13,8 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [jobNotice, setJobNotice] = useState<any>(null);
+  const [jobVisible, setJobVisible] = useState<boolean>(true);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -24,6 +28,42 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
     { name: 'Chatbot', path: '/chatbot' },
     { name: 'Dashboard', path: '/dashboard' },
   ];
+
+  useEffect(() => {
+    const loadJobNotice = () => {
+      const abortController = new AbortController();
+      fetch(`${API_BASE}/api/jobs`, { signal: abortController.signal })
+        .then(async (res) => {
+          if (!res.ok) {
+            setJobVisible(false);
+            setJobNotice(null);
+            return;
+          }
+          const data = await res.json();
+          if (data?.job) {
+            setJobNotice(data.job);
+            setJobVisible(Boolean(data.job.is_visible ?? true));
+          } else {
+            setJobNotice(null);
+            setJobVisible(false);
+          }
+        })
+        .catch(() => {
+          setJobNotice(null);
+          setJobVisible(false);
+        });
+      return () => abortController.abort();
+    };
+
+    const cleanup = loadJobNotice();
+    const onJobUpdated = () => loadJobNotice();
+    window.addEventListener('job-updated', onJobUpdated);
+
+    return () => {
+      cleanup?.();
+      window.removeEventListener('job-updated', onJobUpdated);
+    };
+  }, []);
 
   if (hidden) return null;
 
@@ -93,6 +133,25 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
             )}
           </svg>
         </button>
+      </div>
+
+      <div className={`w-full text-sm text-white ${jobVisible ? 'bg-cyan-500' : 'bg-slate-500'} border-t ${jobVisible ? 'border-cyan-600' : 'border-slate-600'}`}>
+        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-2">
+          {jobVisible && jobNotice ? (
+            <div className="text-sm font-semibold">
+              Open role: <span className="font-black">{jobNotice.title}</span> · {jobNotice.required_skills || 'No skills listed'}
+            </div>
+          ) : (
+            <div className="text-sm font-semibold">
+              No active job opportunities right now — the chatbot is unavailable until a role is published.
+            </div>
+          )}
+          {jobVisible && jobNotice && (
+            <div className="text-xs uppercase tracking-[0.18em] text-white/90">
+              {jobNotice.description ? `${jobNotice.description.slice(0, 120)}${jobNotice.description.length > 120 ? '...' : ''}` : 'Apply to the latest opening today.'}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile Menu */}

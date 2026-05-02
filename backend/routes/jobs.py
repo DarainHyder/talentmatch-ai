@@ -49,12 +49,13 @@ def update_job():
     title       = data.get("title", "").strip()
     description = data.get("description", "").strip()
     skills      = data.get("required_skills", [])
+    is_visible  = bool(data.get("is_visible", True))
 
     if not title:
         return jsonify({"error": "'title' is required."}), 422
 
     try:
-        updated_job = set_jd(title, description, skills)
+        updated_job = set_jd(title, description, skills, is_visible)
         return jsonify({"message": "Job description updated.", "job": updated_job}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500

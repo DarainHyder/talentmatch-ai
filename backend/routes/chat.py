@@ -105,6 +105,10 @@ def chat_start():
         job_description = job.get("description", "")
         skills_raw      = job.get("required_skills", "")
         required_skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
+        job_visible     = bool(job.get("is_visible", True))
+
+        if not job_visible:
+            return jsonify({"error": "The chatbot is temporarily disabled because no job opportunity is currently active."}), 503
 
         # --- Match skills ---
         try:
@@ -239,8 +243,40 @@ def chat_message():
     if sess.get("status") != "interviewing":
         return jsonify({"error": "This interview session is already completed."}), 409
 
-    question_list = sess.get("question_list", [])
-    current_idx   = sess.get("current_question_index", 0)
+    question_list = sess.get("question_list", []) or []
+    current_idx   = int(sess.get("current_question_index", 0) or 0)
+
+    if current_idx >= len(question_list):
+        # If the session somehow advanced beyond the available questions,
+        # finalize the interview gracefully instead of crashing.
+        cv_score   = sess.get("cv_score", 0.0)
+        eval_result = evaluate_interview(session_store.get_transcript(session_id), cv_score)
+        status_label = assign_status(eval_result["final_score"])
+        session_store.complete_session(
+            session_id=session_id,
+            final_score=eval_result["final_score"],
+            interview_score=eval_result["interview_score"],
+            summary=eval_result["summary"],
+        )
+        closing = (
+            "Thank you for completing the interview. We are finishing your evaluation and will be in touch soon."
+        )
+        session_store.append_to_transcript(session_id, "bot", closing)
+        try:
+            database.increment_stat("total_completed")
+            if status_label == "Shortlisted":
+                database.increment_stat("total_shortlisted")
+        except Exception:
+            pass
+        return jsonify({
+            "done":            True,
+            "final_score":     round(eval_result["final_score"], 1),
+            "interview_score": round(eval_result["interview_score"], 1),
+            "cv_score":        round(cv_score, 1),
+            "status":          status_label,
+            "summary":         eval_result["summary"],
+            "message":         closing,
+        }), 200
 
     # --- Save candidate answer ---
     session_store.append_to_transcript(session_id, "candidate", message)

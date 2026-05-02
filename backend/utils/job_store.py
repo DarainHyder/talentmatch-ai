@@ -38,8 +38,9 @@ def _load_or_seed() -> None:
         description = os.getenv("JD_DESCRIPTION",
                                 "We are hiring an AI engineer with experience in ML and NLP.")
         skills_str  = os.getenv("JD_REQUIRED_SKILLS", "Python,Machine Learning,NLP")
-        job = upsert_job(title, description, skills_str)
-        print(f"[job_store] Seeded JD from .env: '{title}'")
+        visible     = os.getenv("JD_VISIBLE", "1") in ("1", "true", "True", "yes", "on")
+        job = upsert_job(title, description, skills_str, visible)
+        print(f"[job_store] Seeded JD from .env: '{title}' (visible={visible})")
     else:
         print(f"[job_store] Loaded JD from DB: '{job['title']}'")
 
@@ -58,7 +59,7 @@ def get_jd() -> dict:
     return dict(_cached_job)
 
 
-def set_jd(title: str, description: str, required_skills) -> dict:
+def set_jd(title: str, description: str, required_skills, is_visible: bool = True) -> dict:
     """
     Update the JD in both SQLite and the in-memory cache.
 
@@ -67,6 +68,7 @@ def set_jd(title: str, description: str, required_skills) -> dict:
     title            : job title string
     description      : full job description text
     required_skills  : list of strings OR comma-separated string
+    is_visible       : whether the job is published and the chatbot is enabled
 
     Returns
     -------
@@ -74,7 +76,7 @@ def set_jd(title: str, description: str, required_skills) -> dict:
     """
     global _cached_job
 
-    updated = upsert_job(title, description, required_skills)
+    updated = upsert_job(title, description, required_skills, is_visible)
     _cached_job = dict(updated)
     return _cached_job
 

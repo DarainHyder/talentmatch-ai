@@ -92,6 +92,10 @@ def init_db() -> None:
         conn.execute("ALTER TABLE candidates ADD COLUMN extracted_skills TEXT;")
     except sqlite3.OperationalError:
         pass
+    try:
+        conn.execute("ALTER TABLE jobs ADD COLUMN is_visible INTEGER DEFAULT 1;")
+    except sqlite3.OperationalError:
+        pass
     conn.commit()
 
     conn.executescript("""
@@ -109,6 +113,7 @@ def init_db() -> None:
             title           TEXT NOT NULL,
             description     TEXT,
             required_skills TEXT,
+            is_visible      INTEGER DEFAULT 1,
             updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE TABLE IF NOT EXISTS application_stats (
@@ -319,6 +324,7 @@ def upsert_job(
     title: str,
     description: str,
     required_skills,    # list or comma-string
+    is_visible: bool = True,
 ) -> dict:
     """
     If the jobs table is empty → INSERT a new job.
@@ -340,10 +346,10 @@ def upsert_job(
     if existing is None:
         conn.execute(
             """
-            INSERT INTO jobs (title, description, required_skills)
-            VALUES (?, ?, ?)
+            INSERT INTO jobs (title, description, required_skills, is_visible)
+            VALUES (?, ?, ?, ?)
             """,
-            (title, description, skills_str),
+            (title, description, skills_str, 1 if is_visible else 0),
         )
     else:
         conn.execute(
@@ -352,10 +358,11 @@ def upsert_job(
             SET title           = ?,
                 description     = ?,
                 required_skills = ?,
+                is_visible      = ?,
                 updated_at      = CURRENT_TIMESTAMP
             WHERE id = ?
             """,
-            (title, description, skills_str, existing["id"]),
+            (title, description, skills_str, 1 if is_visible else 0, existing["id"]),
         )
 
     conn.commit()
