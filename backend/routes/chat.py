@@ -537,3 +537,24 @@ def get_app_stats():
         return jsonify(stats), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ---------------------------------------------------------------------------
+# DEBUG: GET /api/chat/routes (lists all registered routes)
+# ---------------------------------------------------------------------------
+
+@chat_bp.route("/api/chat/routes", methods=["GET"])
+def debug_routes():
+    """
+    List all registered routes for debugging.
+    Remove this endpoint in production.
+    """
+    from flask import current_app
+    routes = []
+    for rule in current_app.url_map.iter_rules():
+        routes.append({
+            "endpoint": rule.endpoint,
+            "methods": sorted(rule.methods - {'HEAD', 'OPTIONS'}),
+            "path": str(rule)
+        })
+    return jsonify({"routes": sorted(routes, key=lambda x: x['path'])}), 200
