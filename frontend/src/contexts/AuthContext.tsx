@@ -78,7 +78,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const API_BASE = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ?? '';
+      const API_BASE = (() => {
+      const raw = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+      return raw.replace(/\/$/, '');
+    })();
       const res  = await fetch(`${API_BASE}/api/auth/login`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -111,7 +114,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const loginWithGoogle = async () => {
     // Redirect to Google OAuth
-    window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/google`;
+    const backendUrl = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+    window.location.href = `${backendUrl.replace(/\/$/, '')}/api/auth/google`;
   };
 
   const logout = () => {

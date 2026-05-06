@@ -3,7 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 
-const API_BASE = (import.meta as any).env?.VITE_API_URL?.replace(/\/$/, '') ?? '';
+const API_BASE = (() => {
+  const raw = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL || '';
+  const trimmed = raw.replace(/\/$/, '');
+  if (import.meta.env.PROD && !trimmed) {
+    console.warn('No backend API URL configured. Set VITE_API_URL or VITE_API_BASE_URL in the production environment.');
+  }
+  return trimmed;
+})();
 
 interface AdminJobSetupProps {
   user: any;
