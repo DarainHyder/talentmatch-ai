@@ -350,7 +350,7 @@ Return ONLY valid JSON format exactly matching the schema below:
                     
                     client = genai.Client(api_key=key)
                     response = client.models.generate_content(
-                        model="gemini-2.0-flash",
+                        model="gemini-2.5-flash",
                         contents=prompt
                     )
                     

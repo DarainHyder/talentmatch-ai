@@ -7,7 +7,7 @@
   <a href="https://reactjs.org/"><img src="https://img.shields.io/badge/React-18.0-blue?style=flat-square&logo=react" alt="React" /></a>
   <a href="https://flask.palletsprojects.com/"><img src="https://img.shields.io/badge/Flask-Backend-black?style=flat-square&logo=flask" alt="Flask" /></a>
   <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat-square&logo=tailwind-css" alt="Tailwind" /></a>
-  <a href="https://deepmind.google/technologies/gemini/"><img src="https://img.shields.io/badge/AI_Engine-Gemini_1.5-8B5CF6?style=flat-square&logo=google" alt="Gemini" /></a>
+  <a href="https://deepmind.google/technologies/gemini/"><img src="https://img.shields.io/badge/AI_Engine-Gemini_2.5-8B5CF6?style=flat-square&logo=google" alt="Gemini" /></a>
 </div>
 
 <br />
@@ -19,7 +19,7 @@ By eliminating human bias during initial screening, TalentMatch identifies the t
 ## ✨ Core Features
 
 *   **Intelligent CV Parsing (Zero-API):** Extracts, categorizes, and scores technical skills directly from PDFs and DOCX files using local `spaCy` NLP pipelines.
-*   **Adaptive AI Interviews:** Seamless integration with **Gemini 1.5 Flash** generates dynamic, personalized technical questions based on the candidate's specific background and the job requirements.
+*   **Adaptive AI Interviews:** Seamless integration with **Gemini 2.5 Flash** generates dynamic, personalized technical questions based on the candidate's specific background and the job requirements.
 *   **Anti-Cheat Heuristics:** Employs advanced local token analysis to automatically detect and flag LLM-generated (ChatGPT) interview responses, penalizing unauthentic submissions.
 *   **Vague Answer Follow-Ups:** Intelligent dialog branching detects "fluff" or overly short answers, automatically requesting the candidate to elaborate on technical specifics.
 *   **Enterprise Dashboard:** A beautiful, JWT-protected dashboard featuring a sleek "Atelier Noir" dark mode. It provides HR with real-time application pipelines, ranked top picks, and full interview transcripts.
@@ -36,7 +36,7 @@ By eliminating human bias during initial screening, TalentMatch identifies the t
 
 ### Backend Architecture
 *   **API:** Python & Flask
-*   **AI Engine:** Google Gemini SDK (`gemini-1.5-flash`)
+*   **AI Engine:** Google Gemini SDK (`gemini-2.5-flash`)
 *   **NLP / Scoring:** `spaCy` (`en_core_web_sm`), `scikit-learn` (TF-IDF Similarity)
 *   **Database:** Persistent SQLite (Ephemeral-safe structure)
 

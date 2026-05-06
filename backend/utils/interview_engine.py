@@ -201,7 +201,7 @@ Rules:
             
             client = genai.Client(api_key=key)
             response = client.models.generate_content(
-                model="gemini-2.0-flash",
+                model="gemini-2.5-flash",
                 contents=prompt
             )
             
@@ -214,7 +214,7 @@ Rules:
             
             questions = json.loads(raw_text)
             if isinstance(questions, list) and len(questions) > 0:
-                print(f"[interview_engine] Generated {len(questions)} questions using Gemini-2.0.")
+                print(f"[interview_engine] Generated {len(questions)} questions using Gemini-2.5.")
                 
                 # Normalise: ensure we always have exactly 5
                 questions = [str(q) for q in questions if str(q).strip()]

@@ -436,7 +436,7 @@
       </div>
       <div class="meta-item">
         <div class="meta-label">AI API</div>
-        <div class="meta-value">Gemini 2.0 Flash</div>
+        <div class="meta-value">Gemini 2.5 Flash</div>
       </div>
       <div class="meta-item">
         <div class="meta-label">Database</div>
@@ -645,7 +645,7 @@ O        →  finalize and store the active phrase (if any), reset</div>
         <span class="step-actor">AI API &mdash; utils/skill_matcher.py</span>
       </div>
       <p class="step-desc">
-        The CV text, the DeBERTa-extracted skill list, the job description, and the list of required skills are composed into a structured prompt and sent to <strong>Google Gemini 2.0 Flash</strong>. Gemini performs a semantic ATS evaluation, applying natural language understanding to recognize synonyms, implied expertise, and contextual skill equivalences that literal keyword matching cannot detect.
+        The CV text, the DeBERTa-extracted skill list, the job description, and the list of required skills are composed into a structured prompt and sent to <strong>Google Gemini 2.5 Flash</strong>. Gemini performs a semantic ATS evaluation, applying natural language understanding to recognize synonyms, implied expertise, and contextual skill equivalences that literal keyword matching cannot detect.
       </p>
       <div class="code-block">
 <span class="code-comment"># Prompt structure sent to Gemini:</span>
@@ -788,7 +788,7 @@ cv_score &ge; 30  &rarr;  candidate proceeds to interview</div>
     <tbody>
       <tr>
         <td>1</td>
-        <td><strong>Gemini 2.0 Flash</strong><br><span class="priority-label">Primary</span></td>
+        <td><strong>Gemini 2.5 Flash</strong><br><span class="priority-label">Primary</span></td>
         <td>Semantic ATS evaluation via LLM prompt. Understands context, synonyms, and implied skills.</td>
         <td>Default. Always attempted first.</td>
       </tr>
@@ -846,7 +846,7 @@ cv_score &ge; 30  &rarr;  candidate proceeds to interview</div>
       <tr>
         <td>Semantic Scoring</td>
         <td>CV text + NER skills + JD + required skills</td>
-        <td><code>utils/skill_matcher.py</code> — Gemini 2.0 Flash</td>
+        <td><code>utils/skill_matcher.py</code> — Gemini 2.5 Flash</td>
         <td>cv_score (0–100), matched_skills, missing_skills</td>
       </tr>
       <tr>
@@ -858,7 +858,7 @@ cv_score &ge; 30  &rarr;  candidate proceeds to interview</div>
       <tr>
         <td>Interview Start</td>
         <td>Candidate profile + job requirements</td>
-        <td><code>utils/interview_engine.py</code> — Gemini 2.0 Flash</td>
+        <td><code>utils/interview_engine.py</code> — Gemini 2.5 Flash</td>
         <td>Personalized first interview question</td>
       </tr>
       <tr>
@@ -874,7 +874,7 @@ cv_score &ge; 30  &rarr;  candidate proceeds to interview</div>
   <div class="doc-footer">
     <div class="left">
       <strong>TalentMatch AI</strong> — Backend Pipeline Documentation<br>
-      DeBERTa-v3-base &nbsp;|&nbsp; Google Gemini 2.0 Flash &nbsp;|&nbsp; Flask &nbsp;|&nbsp; SQLite &nbsp;|&nbsp; HuggingFace Spaces
+      DeBERTa-v3-base &nbsp;|&nbsp; Google Gemini 2.5 Flash &nbsp;|&nbsp; Flask &nbsp;|&nbsp; SQLite &nbsp;|&nbsp; HuggingFace Spaces
     </div>
     <div class="right">
       NER F1 = 0.6276 &nbsp;|&nbsp; Recall = 0.8782<br>
