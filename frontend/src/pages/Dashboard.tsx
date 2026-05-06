@@ -67,11 +67,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
 
     try {
       const token = localStorage.getItem('auth_token');
+      if (!token) {
+        alert('Authentication token missing. Please log in again.');
+        return;
+      }
+
       const res = await fetch(`${API_BASE}/api/chat/sessions/${candidate.session_id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       });
-      const data = await res.json();
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = { error: `Server returned status ${res.status}` };
+      }
+
       if (res.ok && data.deleted) {
         setCandidates(prev => prev.filter(c => c.session_id !== candidate.session_id));
         if (selected?.session_id === candidate.session_id) {
@@ -80,7 +94,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, isLoading, logout }) => {
         }
       } else {
         console.error('Delete failed', data);
-        alert(data.error || 'Unable to delete candidate record.');
+        alert(data.error || `Unable to delete candidate record. (${res.status})`);
       }
     } catch (e) {
       console.error('Delete request failed', e);

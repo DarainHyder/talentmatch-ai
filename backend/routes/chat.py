@@ -465,14 +465,13 @@ def delete_session(session_id: str):
 
         database.delete_candidate(session_id)
         
-        # Evict from memory if exists
+        # Evict from memory if the session exists in active memory.
         try:
-            session_store.get_session(session_id)  # attempt load
             with session_store._lock:
                 session_store._active_sessions.pop(session_id, None)
-        except:
+        except Exception:
             pass
-            
+
         return jsonify({"deleted": True, "message": "Candidate deleted successfully."}), 200
     except Exception as e:
         print(f"[chat] Delete session error: {e}")
