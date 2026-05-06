@@ -28,6 +28,7 @@ from backend.utils.database import (
 
 _active_sessions: dict = {}
 _lock = threading.Lock()
+_SESSION_TIMEOUT_SECONDS = 20 * 60  # 20 minutes
 
 # ---------------------------------------------------------------------------
 # SQLite table bootstrap
@@ -55,6 +56,7 @@ def _init_sessions_table() -> None:
             cv_upload_attempts      INTEGER  DEFAULT 0,
             max_cv_attempts         INTEGER  DEFAULT 3,
             first_question_answered INTEGER  DEFAULT 0,
+            last_activity           REAL     DEFAULT 0,
             created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -69,6 +71,10 @@ def _init_sessions_table() -> None:
         pass
     try:
         conn.execute("ALTER TABLE sessions ADD COLUMN first_question_answered INTEGER DEFAULT 0;")
+    except:
+        pass
+    try:
+        conn.execute("ALTER TABLE sessions ADD COLUMN last_activity REAL DEFAULT 0;")
     except:
         pass
     conn.commit()
@@ -112,7 +118,40 @@ def _deserialize(row: dict) -> dict:
     # SQLite stores bool as integer; normalise
     s["awaiting_followup"] = bool(s.get("awaiting_followup", 0))
     s["first_question_answered"] = bool(s.get("first_question_answered", 0))
+    s["last_activity"] = float(s.get("last_activity", 0.0) or 0.0)
     return s
+
+
+def _is_session_expired(session: dict) -> bool:
+    if session is None:
+        return False
+    if session.get("status") != "interviewing":
+        return False
+    last_activity = session.get("last_activity", 0.0) or 0.0
+    try:
+        last_activity = float(last_activity)
+    except (TypeError, ValueError):
+        return False
+    return (datetime.utcnow().timestamp() - last_activity) > _SESSION_TIMEOUT_SECONDS
+
+
+def _expire_session(session_id: str) -> None:
+    """Mark an interview session as expired due to inactivity."""
+    try:
+        update_session(session_id, status="expired")
+    except Exception:
+        pass
+
+
+def touch_session(session_id: str) -> None:
+    """Update the session's last activity timestamp.
+
+    This is useful for restore or heartbeat endpoints to keep the session alive.
+    """
+    try:
+        update_session(session_id)
+    except Exception:
+        pass
 
 
 def _write_to_sqlite(session: dict) -> None:
@@ -126,13 +165,13 @@ def _write_to_sqlite(session: dict) -> None:
              cv_score, question_list, current_question_index,
              transcript, awaiting_followup, status,
              final_score, interview_score, summary, cv_upload_attempts,
-             max_cv_attempts, first_question_answered)
+             max_cv_attempts, first_question_answered, last_activity)
         VALUES
             (:session_id, :name, :email, :cv_text, :matched_skills,
              :cv_score, :question_list, :current_question_index,
              :transcript, :awaiting_followup, :status,
              :final_score, :interview_score, :summary, :cv_upload_attempts,
-             :max_cv_attempts, :first_question_answered)
+             :max_cv_attempts, :first_question_answered, :last_activity)
         ON CONFLICT(session_id) DO UPDATE SET
             name                   = excluded.name,
             email                  = excluded.email,
@@ -149,7 +188,8 @@ def _write_to_sqlite(session: dict) -> None:
             summary                = excluded.summary,
             cv_upload_attempts     = excluded.cv_upload_attempts,
             max_cv_attempts        = excluded.max_cv_attempts,
-            first_question_answered = excluded.first_question_answered
+            first_question_answered = excluded.first_question_answered,
+            last_activity           = excluded.last_activity
         """,
         {
             "session_id":             s.get("session_id", ""),
@@ -169,6 +209,7 @@ def _write_to_sqlite(session: dict) -> None:
             "cv_upload_attempts":     s.get("cv_upload_attempts", 0),
             "max_cv_attempts":        s.get("max_cv_attempts", 3),
             "first_question_answered": 1 if s.get("first_question_answered") else 0,
+            "last_activity":          s.get("last_activity", 0.0),
         },
     )
     conn.commit()
@@ -227,6 +268,7 @@ def create_session(
     else:
         matched_skills_str = str(matched_skills) if matched_skills else ""
 
+    now_ts = datetime.utcnow().timestamp()
     session = {
         "session_id":             session_id,
         "name":                   name,
@@ -243,6 +285,7 @@ def create_session(
         "interview_score":        0.0,
         "summary":                "",
         "created_at":             datetime.utcnow().isoformat(),
+        "last_activity":          now_ts,
         "cv_upload_attempts":     0,
         "max_cv_attempts":        3,
         "first_question_answered": False,
@@ -286,6 +329,9 @@ def get_session(session_id: str) -> dict:
     with _lock:
         session = _active_sessions.get(session_id)
         if session is not None:
+            if _is_session_expired(session):
+                _expire_session(session_id)
+                session["status"] = "expired"
             return dict(session)   # return a copy to avoid accidental mutation
 
     # Recovery path — load from SQLite
@@ -298,6 +344,10 @@ def get_session(session_id: str) -> dict:
         return None
 
     session = _deserialize(dict(row))
+
+    if _is_session_expired(session):
+        _expire_session(session_id)
+        session["status"] = "expired"
 
     # Re-populate memory cache so next call is fast
     with _lock:
@@ -328,6 +378,10 @@ def update_session(session_id: str, **kwargs) -> None:
             if row is None:
                 raise ValueError(f"Session '{session_id}' not found.")
             session = _deserialize(dict(row))
+
+        # Touch the session for any update to keep it active.
+        if "last_activity" not in kwargs:
+            kwargs["last_activity"] = datetime.utcnow().timestamp()
 
         session.update(kwargs)
         _active_sessions[session_id] = session

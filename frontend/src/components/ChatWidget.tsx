@@ -51,6 +51,44 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       setJobInfo(null);
     }
   };
+
+  const restoreServerSession = async (restoredSessionId: string) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/chat/session/${restoredSessionId}`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 410 || data.error?.includes('expired')) {
+          setMessages(prev => [
+            ...prev,
+            { role: 'bot', content: 'Your previous interview session expired due to inactivity. Please upload your CV again to start a fresh screening.' }
+          ]);
+          setSessionId(null);
+          setIsUploaded(false);
+          setFirstQuestionAnswered(false);
+        }
+        return;
+      }
+
+      const data = await res.json();
+      if (data.status !== 'interviewing') {
+        const message = data.status === 'expired'
+          ? 'Your previous interview session expired due to inactivity. Please upload your CV again to start a fresh screening.'
+          : 'Your previous interview session is no longer active. Please upload your CV again to begin a new screening.';
+
+        setMessages(prev => [
+          ...prev,
+          { role: 'bot', content: message }
+        ]);
+        setSessionId(null);
+        setIsUploaded(false);
+        setFirstQuestionAnswered(false);
+        return;
+      }
+    } catch {
+      // Ignore restore errors; local state still preserves earlier interaction.
+    }
+  };
+
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Restore session state after page refresh
@@ -69,6 +107,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : messages);
           setUserName(parsed.userName || '');
           setUserEmail(parsed.userEmail || '');
+          restoreServerSession(parsed.sessionId);
         }
       }
     } catch (error) {
@@ -98,6 +137,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
 
   useEffect(() => {
     fetchJobAvailability();
+
+    const onJobUpdated = () => fetchJobAvailability();
+    window.addEventListener('job-updated', onJobUpdated);
+    return () => window.removeEventListener('job-updated', onJobUpdated);
   }, []);
 
   // Auto-scroll to bottom
@@ -209,7 +252,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !sessionId || isTyping) return;
+    if (!input.trim() || !sessionId || isTyping || !jobAvailable) return;
+
+    if (!jobAvailable) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'bot', content: 'Hiring is currently paused. Please try again once the role is active.' }
+      ]);
+      return;
+    }
 
     const userMsg = input;
     setInput('');
@@ -341,11 +392,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
                   <button 
                     type="button" 
                     onClick={() => fileInputRef.current?.click()}
+                    disabled={!jobAvailable}
                     className={`shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl border transition-all ${
                       isUploaded 
                         ? 'bg-emerald-50 text-emerald-500 border-emerald-100' 
                         : 'bg-slate-50 text-slate-400 border-slate-100 hover:border-cyan-500/30 hover:text-cyan-500'
-                    }`}
+                    } ${!jobAvailable ? 'cursor-not-allowed opacity-60' : ''}`}
                   >
                     {isUploaded ? (
                       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
@@ -379,12 +431,12 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
                         value={input} 
                         onChange={e => setInput(e.target.value)} 
                         placeholder={isUploaded ? "Enter neural signal..." : "Enter info & upload CV..."}
-                        disabled={!isUploaded || isTyping}
+                        disabled={!jobAvailable || !isUploaded || isTyping}
                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all pr-14 disabled:opacity-50" 
                       />
                       <button 
                         type="submit" 
-                        disabled={!isUploaded || isTyping}
+                        disabled={!jobAvailable || !isUploaded || isTyping}
                         className="absolute right-2 top-2 w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform disabled:opacity-0"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>

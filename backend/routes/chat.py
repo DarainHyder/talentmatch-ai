@@ -240,6 +240,9 @@ def chat_message():
     if not sess:
         return jsonify({"error": "Session not found. Please restart the interview."}), 404
 
+    if sess.get("status") == "expired":
+        return jsonify({"error": "This interview session has expired due to inactivity. Please restart the interview."}), 410
+
     if sess.get("status") != "interviewing":
         return jsonify({"error": "This interview session is already completed."}), 409
 
@@ -414,6 +417,9 @@ def get_public_session(session_id: str):
         session = session_store.get_session(session_id)
         if not session:
             return jsonify({"error": "Session not found."}), 404
+
+        if session.get("status") == "interviewing":
+            session_store.touch_session(session_id)
 
         return jsonify({
             "session_id": session_id,

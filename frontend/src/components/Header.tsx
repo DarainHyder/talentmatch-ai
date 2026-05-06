@@ -76,7 +76,7 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
       <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center group">
-          <img src="/sh-logo.png" alt="Smart Hire" className="h-16 object-contain" />
+          <img src="/sh-logo.png" alt="Smart Hire" className="h-14 object-contain" />
         </Link>
 
         {/* Desktop Nav */}
