@@ -1,13 +1,24 @@
-# ML dependencies for DeBERTa NER inference
-# Install ONLY on machines where you want DeBERTa skill extraction enabled.
+# ML dependencies for DeBERTa / HF inference and optional local embedding models.
+# Install ONLY on machines where you want DeBERTa skill extraction or local HF inference enabled.
 # The core app works without these (falls back to Gemini).
 #
-# CPU-only torch (200MB vs 700MB GPU version):
-#   pip install -r requirements-ml.txt --index-url https://download.pytorch.org/whl/cpu
-#
-# After installing, also upload model_output/ folder to:
-#   scripts/model_training/model_output/
+# Notes:
+# - For CPU-only installations use the PyTorch CPU wheels index:
+#     pip install -r backend/requirements-ml.txt --index-url https://download.pytorch.org/whl/cpu
+# - If you plan to run on GPU, install the CUDA-matching torch build on the host.
+# - After installing, download / place any local model artifacts under scripts/model_training/model_output/ if required.
 
+# Core ML libraries
 torch
 transformers
+sentence-transformers
+huggingface-hub
 numpy
+
+# Optional audio/vision extras (install only if needed)
+# torchvision
+# torchaudio
+
+# spaCy model (install spaCy separately then download the model):
+#   pip install spacy
+#   python -m spacy download en_core_web_sm
