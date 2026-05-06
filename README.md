@@ -70,6 +70,18 @@ ADMIN_EMAIL=admin@company.com
 ADMIN_PASSWORD=secureAdmin2026
 ```
 
+For production frontend builds, also set the API base URL in Vercel:
+
+```bash
+VITE_API_URL=https://your-huggingface-space-url.hf.space
+```
+
+or
+
+```bash
+VITE_API_BASE_URL=https://your-huggingface-space-url.hf.space
+```
+
 Start the Flask server:
 ```bash
 python -m flask --app app run --port 5000 --debug
@@ -101,11 +113,12 @@ By default, the dashboard relies on the environment variables defined in your `.
 
 ## 📦 Deployment Guide
 
-To deploy this project to production for **free**, the recommended architecture is:
+To deploy this project to production, the recommended architecture is:
 
 1.  **Frontend:** Hosted on [Vercel](https://vercel.com) (via GitHub integration).
-2.  **Backend:** Hosted on [PythonAnywhere](https://www.pythonanywhere.com). 
-    *   *Note on Serverless:* Vercel's backend functions are stateless and reset constantly. You **cannot** use Vercel for the Python backend because it will wipe the SQLite `.db` file every few minutes taking candidate data with it. PythonAnywhere ensures persistent disk storage!
+2.  **Backend:** Hosted on [Hugging Face Spaces](https://huggingface.co/spaces) or another persistent Python host.
+    *   *Recommended:* use `VITE_API_URL` or `VITE_API_BASE_URL` on Vercel to point the frontend to your backend URL.
+    *   *Note on Serverless:* Vercel's backend functions are stateless and reset constantly. You **cannot** use Vercel for the Python backend if you need persistent SQLite storage, because the file may be wiped.
 
 ## 📄 License
 This project is licensed under the MIT License.

@@ -1,8 +1,10 @@
 import { ApiResponse } from '../types/api';
 
-const API_URL = (
-  import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
-).replace(/\/$/, '');
+const rawApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL;
+const API_URL = (rawApiUrl || 'http://localhost:5000').replace(/\/$/, '');
+if (import.meta.env.PROD && !rawApiUrl) {
+  console.warn('Production build missing backend API URL. Set VITE_API_URL or VITE_API_BASE_URL in the environment.');
+}
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {

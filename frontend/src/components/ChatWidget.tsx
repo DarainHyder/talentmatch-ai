@@ -298,15 +298,28 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     }
   };
 
-  const terminateSession = async (id?: string) => {
+  const terminateSession = async (id?: string, useBeacon = false) => {
     const sid = id || sessionId;
     if (!sid) return;
+
+    const payload = JSON.stringify({ session_id: sid });
+    const url = `${API_BASE}/api/chat/terminate`;
+
+    if (useBeacon && typeof navigator.sendBeacon === 'function') {
+      try {
+        const blob = new Blob([payload], { type: 'application/json' });
+        navigator.sendBeacon(url, blob);
+        return;
+      } catch (e) {
+        console.warn('sendBeacon failed, falling back to fetch', e);
+      }
+    }
+
     try {
-      // Use keepalive to allow sending during unload
-      await fetch(`${API_BASE}/api/chat/terminate`, {
+      await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ session_id: sid }),
+        body: payload,
         keepalive: true,
       });
     } catch (e) {
@@ -315,12 +328,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     }
   };
 
-  const resetChat = async () => {
-    if (sessionId) {
-      await terminateSession();
-    }
-    const initial = [{ role: 'bot', content: "Hello! I am your Smart Hire AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }];
-    setMessages(initial);
+  const clearCandidateSession = () => {
     setSessionId(null);
     setIsUploaded(false);
     setFirstQuestionAnswered(false);
@@ -328,22 +336,32 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     try { window.localStorage.removeItem(STORAGE_KEY); } catch {};
   };
 
+  const resetChat = async () => {
+    if (sessionId) {
+      await terminateSession();
+    }
+    const initial = [{ role: 'bot', content: "Hello! I am your Smart Hire AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }];
+    setMessages(initial);
+    clearCandidateSession();
+  };
+
   useEffect(() => {
-    const onHidden = () => {
-      if (document.hidden) {
-        // treat leaving the tab as session end
-        terminateSession();
-        setSessionId(null);
-        setIsUploaded(false);
+    const onPageHide = (event: PageTransitionEvent) => {
+      if (sessionId && !event.persisted) {
+        terminateSession(sessionId, true);
+        clearCandidateSession();
       }
     };
     const onBeforeUnload = () => {
-      if (sessionId) terminateSession(sessionId);
+      if (sessionId) {
+        terminateSession(sessionId, true);
+        clearCandidateSession();
+      }
     };
-    document.addEventListener('visibilitychange', onHidden);
+    window.addEventListener('pagehide', onPageHide);
     window.addEventListener('beforeunload', onBeforeUnload);
     return () => {
-      document.removeEventListener('visibilitychange', onHidden);
+      window.removeEventListener('pagehide', onPageHide);
       window.removeEventListener('beforeunload', onBeforeUnload);
     };
   }, [sessionId]);
