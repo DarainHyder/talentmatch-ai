@@ -26,6 +26,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const [restoreCompleted, setRestoreCompleted] = useState(false);
   const [cvAttempts, setCvAttempts] = useState(0);
   const [maxCvAttempts] = useState(3);
+  const [attemptNotice, setAttemptNotice] = useState('');
   const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
   const STORAGE_KEY = 'smart_hire_chat_state';
 
@@ -222,15 +223,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           { role: 'user', content: `Attached CV: ${file.name}` },
           { role: 'bot', content: `CV Analyzed. Integrity Check: 100%. Welcome ${data.name || 'Candidate'}. Neural Indexing Completed (${data.cv_score}% match).` },
           { role: 'bot', content: data.first_question },
-          { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. Once you answer the first question below, you won't be able to upload a new resume.` }
         ]);
+        setAttemptNotice(`Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used`);
       } else if (data.qualified === false) {
         setMessages(prev => [
           ...prev,
           { role: 'user', content: `Attached CV: ${file.name}` },
           { role: 'bot', content: data.message || 'Your CV was processed but did not meet the minimum requirements.' },
-          { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. ${maxCvAttempts - newAttempts} attempts remaining.` }
         ]);
+        setAttemptNotice(`Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used — ${maxCvAttempts - newAttempts} remaining`);
       } else {
         setMessages(prev => [
           ...prev,
@@ -243,8 +244,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       setMessages(prev => [
         ...prev,
         { role: 'bot', content: err?.message || 'Neural link interrupted. Please ensure the CV is a valid PDF/Word document.' },
-        { role: 'bot', content: `📝 Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used. ${maxCvAttempts - newAttempts} attempts remaining.` }
       ]);
+      setAttemptNotice(`Resume Upload Status: ${newAttempts}/${maxCvAttempts} attempts used — ${maxCvAttempts - newAttempts} remaining`);
     } finally {
       setUploading(false);
     }
@@ -289,6 +290,56 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
       setIsTyping(false);
     }
   };
+
+  const terminateSession = async (id?: string) => {
+    const sid = id || sessionId;
+    if (!sid) return;
+    try {
+      // Use keepalive to allow sending during unload
+      await fetch(`${API_BASE}/api/chat/terminate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: sid }),
+        keepalive: true,
+      });
+    } catch (e) {
+      // best-effort
+      console.warn('Failed to terminate session', e);
+    }
+  };
+
+  const resetChat = async () => {
+    if (sessionId) {
+      await terminateSession();
+    }
+    const initial = [{ role: 'bot', content: "Hello! I am your Smart Hire AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }];
+    setMessages(initial);
+    setSessionId(null);
+    setIsUploaded(false);
+    setFirstQuestionAnswered(false);
+    setAttemptNotice('');
+    try { window.localStorage.removeItem(STORAGE_KEY); } catch {};
+  };
+
+  useEffect(() => {
+    const onHidden = () => {
+      if (document.hidden) {
+        // treat leaving the tab as session end
+        terminateSession();
+        setSessionId(null);
+        setIsUploaded(false);
+      }
+    };
+    const onBeforeUnload = () => {
+      if (sessionId) terminateSession(sessionId);
+    };
+    document.addEventListener('visibilitychange', onHidden);
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      document.removeEventListener('visibilitychange', onHidden);
+      window.removeEventListener('beforeunload', onBeforeUnload);
+    };
+  }, [sessionId]);
 
   if (hidden && !inline) return null;
 
@@ -387,6 +438,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
             </div>
 
             {/* Footer / Input */}
+            <div className="px-6 pt-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs text-slate-600">{attemptNotice || 'No resume uploaded yet.'}</div>
+                <div>
+                  <button onClick={resetChat} className="text-xs font-semibold text-rose-600 hover:underline">Reset Chat</button>
+                </div>
+              </div>
+            </div>
             <form onSubmit={sendMessage} className="p-6 border-t border-slate-100 bg-white shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.02)]">
                <div className="flex items-center gap-3">
                   <button 
@@ -457,7 +516,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-sky-500 rounded-[22px] flex items-center justify-center text-white shadow-2xl shadow-cyan-500/40 hover:scale-110 active:scale-95 transition-all relative group"
         >
           <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-4 border-white animate-pulse" />
+          {/* removed confusing tick badge */}
         </motion.button>
       )}
     </div>

@@ -80,6 +80,18 @@ def chat_start():
         if _file_too_large(cv_file):
             return jsonify({"error": "File exceeds the 5 MB limit."}), 413
 
+        # --- Enforce per-email CV upload attempt limits (server-side) ---
+        try:
+            conn = database.get_db()
+            cursor = conn.execute("SELECT COALESCE(SUM(cv_upload_attempts),0) as used FROM sessions WHERE email = ?", (email,))
+            row = cursor.fetchone()
+            used_attempts = int(row["used"] or 0)
+            if used_attempts >= 3:
+                return jsonify({"error": "You have used the maximum number of resume upload attempts (3). Please contact support."}), 403
+        except Exception:
+            # Do not block on DB errors — fall back to allowing upload
+            pass
+
         # --- Parse CV ---
         try:
             cv_text = parse_cv(cv_file)
@@ -187,6 +199,11 @@ def chat_start():
         # --- Final cleanup and logging ---
         try:
             database.increment_stat("total_interviews_started")
+            # Record this upload attempt on the session
+            try:
+                session_store.increment_cv_attempts(sid)
+            except Exception:
+                pass
             session_store.append_to_transcript(sid, "bot", question_list[0])
         except Exception as e:
             print(f"[chat] Final logging failed (continuing session): {e}")
@@ -460,6 +477,41 @@ def delete_session(session_id: str):
     except Exception as e:
         print(f"[chat] Delete session error: {e}")
         return jsonify({"error": f"Failed to delete candidate: {str(e)}"}), 500
+
+
+@chat_bp.route("/api/chat/terminate", methods=["POST"])
+def terminate_session():
+    """Public endpoint for candidates to explicitly terminate their session.
+
+    Body: { session_id: str }
+    Marks the session status as 'expired' and evicts it from memory so the
+    candidate will be treated as a new user on next visit.
+    """
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "JSON body required."}), 400
+
+    session_id = data.get("session_id", "").strip()
+    if not session_id:
+        return jsonify({"error": "session_id is required."}), 400
+
+    try:
+        sess = session_store.get_session(session_id)
+        if not sess:
+            return jsonify({"error": "Session not found."}), 404
+
+        # Mark expired and evict from memory
+        session_store.update_session(session_id, status="expired")
+        try:
+            with session_store._lock:
+                session_store._active_sessions.pop(session_id, None)
+        except Exception:
+            pass
+
+        return jsonify({"terminated": True}), 200
+    except Exception as e:
+        print(f"[chat] Terminate session error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------
