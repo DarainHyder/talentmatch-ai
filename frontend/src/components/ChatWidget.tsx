@@ -11,19 +11,19 @@ const API_BASE = (() => {
 })();
 
 interface ChatWidgetProps {
-  user: any;
-  hidden: boolean;
+  user?: any;
+  hidden?: boolean;
   inline?: boolean;
 }
 
-const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false }) => {
+const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = false }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: string; content: string }[]>([
     { role: 'bot', content: "Hello! I am your Smart Hire AI co-pilot. Please enter your name and email, then upload your CV to initialize the screening protocol." }
   ]);
   const [input, setInput] = useState('');
-  const [userName, setUserName] = useState('');
-  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState(user?.name || '');
+  const [userEmail, setUserEmail] = useState(user?.email || '');
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isUploaded, setIsUploaded] = useState(false);
@@ -36,6 +36,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const [attemptNotice, setAttemptNotice] = useState('');
   const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
   const STORAGE_KEY = 'smart_hire_chat_state';
+
+  const clearCandidateSession = () => {
+    setSessionId(null);
+    setIsUploaded(false);
+    setFirstQuestionAnswered(false);
+    setAttemptNotice('');
+    try { window.localStorage.removeItem(STORAGE_KEY); } catch {}
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fetchJobAvailability = async () => {
@@ -70,9 +78,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
             ...prev,
             { role: 'bot', content: 'Your previous interview session expired due to inactivity. Please upload your CV again to start a fresh screening.' }
           ]);
-          setSessionId(null);
-          setIsUploaded(false);
-          setFirstQuestionAnswered(false);
+          clearCandidateSession();
         }
         return;
       }
@@ -87,13 +93,15 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           ...prev,
           { role: 'bot', content: message }
         ]);
-        setSessionId(null);
-        setIsUploaded(false);
-        setFirstQuestionAnswered(false);
+        clearCandidateSession();
         return;
       }
-    } catch {
-      // Ignore restore errors; local state still preserves earlier interaction.
+
+      if (Array.isArray(data.transcript) && data.transcript.length > 0) {
+        setMessages(data.transcript);
+      }
+    } catch (error) {
+      console.warn('Session restore failed:', error);
     }
   };
 
@@ -112,7 +120,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
           setIsUploaded(parsed.isUploaded || false);
           setCvAttempts(parsed.cvAttempts || 0);
           setFirstQuestionAnswered(parsed.firstQuestionAnswered || false);
-          setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : messages);
+          setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : []);
           setUserName(parsed.userName || '');
           setUserEmail(parsed.userEmail || '');
           restoreServerSession(parsed.sessionId);
@@ -123,7 +131,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     } finally {
       setRestoreCompleted(true);
     }
-  }, [restoreCompleted, messages]);
+  }, [restoreCompleted]);
 
   useEffect(() => {
     if (!restoreCompleted) return;
@@ -161,7 +169,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
   const fetchWithRetry = async (url: string, options: RequestInit, retries = 1): Promise<any> => {
     try {
       const res = await fetch(url, options);
-      const data = await res.json().catch(() => ({}));
+      const rawText = await res.text();
+      let data: any = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        data = { error: rawText };
+      }
 
       if (!res.ok) {
         const message = data.error || data.message || res.statusText || 'Unknown server error';
@@ -328,14 +342,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     }
   };
 
-  const clearCandidateSession = () => {
-    setSessionId(null);
-    setIsUploaded(false);
-    setFirstQuestionAnswered(false);
-    setAttemptNotice('');
-    try { window.localStorage.removeItem(STORAGE_KEY); } catch {};
-  };
-
   const resetChat = async () => {
     if (sessionId) {
       await terminateSession();
@@ -344,27 +350,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden, inline = false })
     setMessages(initial);
     clearCandidateSession();
   };
-
-  useEffect(() => {
-    const onPageHide = (event: PageTransitionEvent) => {
-      if (sessionId && !event.persisted) {
-        terminateSession(sessionId, true);
-        clearCandidateSession();
-      }
-    };
-    const onBeforeUnload = () => {
-      if (sessionId) {
-        terminateSession(sessionId, true);
-        clearCandidateSession();
-      }
-    };
-    window.addEventListener('pagehide', onPageHide);
-    window.addEventListener('beforeunload', onBeforeUnload);
-    return () => {
-      window.removeEventListener('pagehide', onPageHide);
-      window.removeEventListener('beforeunload', onBeforeUnload);
-    };
-  }, [sessionId]);
 
   if (hidden && !inline) return null;
 
