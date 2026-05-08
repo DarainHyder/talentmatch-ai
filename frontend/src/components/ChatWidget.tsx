@@ -99,6 +99,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
 
       if (Array.isArray(data.transcript) && data.transcript.length > 0) {
         setMessages(data.transcript);
+        setIsUploaded(true);
+        setFirstQuestionAnswered(Boolean(data.current_question_index > 0 || data.transcript.some((msg: any) => msg.role === 'user')));
       }
     } catch (error) {
       console.warn('Session restore failed:', error);
@@ -297,7 +299,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
       }, 2);
 
       if (data.done) {
-        setMessages(prev => [...prev, { role: 'bot', content: `${data.message}\n\nFinal Score: ${data.final_score}%` }]);
+        if (!firstQuestionAnswered) {
+          setFirstQuestionAnswered(true);
+        }
+        setMessages(prev => [...prev, { role: 'bot', content: `${data.message || 'Thank you for completing the interview.'}\n\nFinal Score: ${data.final_score ?? 0}%` }]);
       } else {
         // Track that first question has been answered (lock CV uploads after first answer)
         if (!firstQuestionAnswered) {
