@@ -35,12 +35,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
   const [maxCvAttempts] = useState(3);
   const [attemptNotice, setAttemptNotice] = useState('');
   const [firstQuestionAnswered, setFirstQuestionAnswered] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const STORAGE_KEY = 'smart_hire_chat_state';
 
   const clearCandidateSession = () => {
     setSessionId(null);
     setIsUploaded(false);
     setFirstQuestionAnswered(false);
+    setIsCompleted(false);
     setAttemptNotice('');
     try { window.localStorage.removeItem(STORAGE_KEY); } catch {}
   };
@@ -105,6 +107,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
         }));
         setMessages(mappedMessages);
         setIsUploaded(true);
+        setIsCompleted(data.status === 'completed');
         setFirstQuestionAnswered(Boolean(data.current_question_index > 0 || mappedMessages.some((msg: any) => msg.role === 'user')));
       }
     } catch (error) {
@@ -127,6 +130,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
           setIsUploaded(parsed.isUploaded || false);
           setCvAttempts(parsed.cvAttempts || 0);
           setFirstQuestionAnswered(parsed.firstQuestionAnswered || false);
+          setIsCompleted(parsed.isCompleted || false);
           const initialMessages = Array.isArray(parsed.messages)
             ? parsed.messages.map((m: any) => ({
                 role: m.role,
@@ -156,6 +160,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
       messages,
       cvAttempts,
       firstQuestionAnswered,
+      isCompleted,
     };
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -313,6 +318,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
         if (!firstQuestionAnswered) {
           setFirstQuestionAnswered(true);
         }
+        setIsCompleted(true);
         setMessages(prev => [...prev, { role: 'bot', content: `${data.message || 'Thank you for completing the interview.'}\n\nFinal Score: ${data.final_score ?? 0}%` }]);
       } else {
         // Track that first question has been answered (lock CV uploads after first answer)
@@ -515,13 +521,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
                         type="text" 
                         value={input} 
                         onChange={e => setInput(e.target.value)} 
-                        placeholder={isUploaded ? "Enter neural signal..." : "Enter info & upload CV..."}
-                        disabled={!jobAvailable || !isUploaded || isTyping}
+                        placeholder={isCompleted ? "Interview completed" : (isUploaded ? "Enter neural signal..." : "Enter info & upload CV...")}
+                        disabled={!jobAvailable || !isUploaded || isTyping || isCompleted}
                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 text-sm font-bold text-slate-800 focus:border-cyan-500/50 focus:bg-white outline-none transition-all pr-14 disabled:opacity-50" 
                       />
                       <button 
                         type="submit" 
-                        disabled={!jobAvailable || !isUploaded || isTyping}
+                        disabled={!jobAvailable || !isUploaded || isTyping || isCompleted}
                         className="absolute right-2 top-2 w-10 h-10 bg-cyan-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 transition-transform disabled:opacity-0"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5-5 5M6 7l5 5-5 5" /></svg>
