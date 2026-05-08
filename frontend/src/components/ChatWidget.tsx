@@ -274,7 +274,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !sessionId || isTyping || !jobAvailable) return;
+    if (!input.trim() || !sessionId || isTyping) return;
 
     if (!jobAvailable) {
       setMessages(prev => [
