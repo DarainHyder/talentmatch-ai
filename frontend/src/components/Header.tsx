@@ -32,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
-    { name: 'Chatbot', path: '/chatbot' },
+    ...(jobVisible ? [{ name: 'Chatbot', path: '/chatbot' }] : []),
     { name: 'Dashboard', path: '/dashboard' },
   ];
 
@@ -121,9 +121,11 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
               Sign Out
             </button>
           )}
-          <Link to="/chatbot" className="btn-primary text-base px-6 py-3 font-semibold">
-            Try Demo
-          </Link>
+          {jobVisible && (
+            <Link to="/chatbot" className="btn-primary text-base px-6 py-3 font-semibold">
+              Try Demo
+            </Link>
+          )}
         </div>
 
         {/* Mobile hamburger */}
@@ -142,24 +144,22 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
         </button>
       </div>
 
-      <div className={`w-full text-sm text-white ${jobVisible ? 'bg-cyan-500' : 'bg-slate-500'} border-t ${jobVisible ? 'border-cyan-600' : 'border-slate-600'}`}>
-        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-2">
-          {jobVisible && jobNotice ? (
-            <div className="text-sm font-semibold">
-              Open role: <span className="font-black">{jobNotice.title}</span> · {jobNotice.required_skills || 'No skills listed'}
-            </div>
-          ) : (
-            <div className="text-sm font-semibold">
-              No active job opportunities right now — the chatbot is unavailable until a role is published.
-            </div>
-          )}
-          {jobVisible && jobNotice && (
-            <div className="text-xs uppercase tracking-[0.18em] text-white/90">
-              {jobNotice.description ? `${jobNotice.description.slice(0, 120)}${jobNotice.description.length > 120 ? '...' : ''}` : 'Apply to the latest opening today.'}
-            </div>
-          )}
+      {jobVisible && (
+        <div className="w-full text-sm text-white bg-cyan-500 border-t border-cyan-600">
+          <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-2">
+            {jobNotice && (
+              <>
+                <div className="text-sm font-semibold">
+                  Open role: <span className="font-black">{jobNotice.title}</span> · {jobNotice.required_skills || 'No skills listed'}
+                </div>
+                <div className="text-xs uppercase tracking-[0.18em] text-white/90">
+                  {jobNotice.description ? `${jobNotice.description.slice(0, 120)}${jobNotice.description.length > 120 ? '...' : ''}` : 'Apply to the latest opening today.'}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Mobile Menu */}
       {mobileOpen && (
@@ -174,9 +174,11 @@ const Header: React.FC<HeaderProps> = ({ user, logout, hidden }) => {
               {link.name}
             </Link>
           ))}
-          <Link to="/chatbot" onClick={() => setMobileOpen(false)} className="btn-primary text-sm px-5 py-2.5 w-full justify-center">
-            Try Demo
-          </Link>
+          {jobVisible && (
+            <Link to="/chatbot" onClick={() => setMobileOpen(false)} className="btn-primary text-sm px-5 py-2.5 w-full justify-center">
+              Try Demo
+            </Link>
+          )}
         </div>
       )}
     </header>

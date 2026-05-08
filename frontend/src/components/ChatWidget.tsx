@@ -373,7 +373,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
     clearCandidateSession();
   };
 
-  if (hidden && !inline) return null;
+  if ((hidden && !inline) || !jobAvailable) return null;
 
   return (
     <div className={`${inline ? 'w-full' : 'fixed bottom-8 right-8 z-[100]'}`}>

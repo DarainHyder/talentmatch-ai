@@ -2,7 +2,43 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import ChatWidget from '../components/ChatWidget';
 
+const API_BASE = (() => {
+  const raw = (import.meta as any).env?.VITE_API_URL || (import.meta as any).env?.VITE_API_BASE_URL || '';
+  const trimmed = raw.replace(/\/$/, '');
+  return trimmed;
+})();
+
 const ChatbotPage: React.FC = () => {
+  const [jobAvailable, setJobAvailable] = React.useState(true);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    fetch(`${API_BASE}/api/jobs`)
+      .then(res => res.json())
+      .then(data => {
+        setJobAvailable(Boolean(data?.job?.is_visible ?? true));
+      })
+      .catch(() => setJobAvailable(false))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+
+  if (!jobAvailable) {
+    return (
+      <div className="bg-white min-h-screen pt-32 px-6 text-center">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <img src="/chatbot-hero-bot-transparent.png" alt="Paused" className="w-48 mx-auto mb-8 opacity-50" />
+          <h1 className="text-4xl font-black mb-4" style={{ fontFamily: 'Manrope, sans-serif' }}>Hiring is Currently Paused</h1>
+          <p className="text-gray-600 max-w-lg mx-auto text-lg font-medium">
+            We don't have any active job openings at the moment. Please check back later or follow our updates for new opportunities!
+          </p>
+          <a href="/" className="inline-block mt-10 text-cyan-500 font-bold hover:underline">Back to Home</a>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white min-h-screen pt-16" style={{ fontFamily: 'Inter, sans-serif' }}>
       
