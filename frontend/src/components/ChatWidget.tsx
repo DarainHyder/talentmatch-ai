@@ -98,9 +98,14 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
       }
 
       if (Array.isArray(data.transcript) && data.transcript.length > 0) {
-        setMessages(data.transcript);
+        // Map backend 'message' key to frontend 'content' key
+        const mappedMessages = data.transcript.map((m: any) => ({
+          role: m.role,
+          content: m.content || m.message || ''
+        }));
+        setMessages(mappedMessages);
         setIsUploaded(true);
-        setFirstQuestionAnswered(Boolean(data.current_question_index > 0 || data.transcript.some((msg: any) => msg.role === 'user')));
+        setFirstQuestionAnswered(Boolean(data.current_question_index > 0 || mappedMessages.some((msg: any) => msg.role === 'user')));
       }
     } catch (error) {
       console.warn('Session restore failed:', error);
@@ -122,7 +127,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ user, hidden = false, inline = 
           setIsUploaded(parsed.isUploaded || false);
           setCvAttempts(parsed.cvAttempts || 0);
           setFirstQuestionAnswered(parsed.firstQuestionAnswered || false);
-          setMessages(Array.isArray(parsed.messages) && parsed.messages.length > 0 ? parsed.messages : []);
+          const initialMessages = Array.isArray(parsed.messages)
+            ? parsed.messages.map((m: any) => ({
+                role: m.role,
+                content: m.content || m.message || ''
+              }))
+            : [];
+          setMessages(initialMessages);
           setUserName(parsed.userName || '');
           setUserEmail(parsed.userEmail || '');
           restoreServerSession(parsed.sessionId);
